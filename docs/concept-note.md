@@ -153,63 +153,62 @@ defended assumptions rather than open questions; each is a KB/config change if r
   ("access is provisioned by your Cadre team as part of an engagement"). We do not build the portal
   (§4).
 - **A-4 Persistence (data minimization).** We assume **no consent basis** to log anonymous
-  conversations from a public site, so we persist only **name/email/excerpt**. *Trade-off named:*
-  without transcripts we cannot measure **deflection rate** — the metric that proves the bot works
-  — until a consent notice is added (see §12, §15).
+  conversations from a public site, so we persist only **name/email/excerpt** — no transcripts.
+  *This does not block the key metric:* **deflection rate is measurable from session-level outcome
+  logs alone** (answered vs. escalated, no PII — NFR-006), so no transcripts and no consent notice
+  are needed. Transcripts would only add *why* a session escalated, not *whether* it did.
 
 ## 7. Research & industry context
 
-### 7.1 How established products handle this
-
-- **Intercom Fin / Ada** — ground answers in a curated help-center corpus and explicitly refuse
-  outside it, handing off to a human. This "grounded-or-handoff" contract is exactly F1+F3.
-- **Drift** — leans on lead capture and routing as the primary value, with the bot as qualifier.
-  Reinforces that escalation-to-lead is a first-class feature.
-
-### 7.2 Relevant prior art / papers / standards
-
-- RAG (arXiv:2005.11401) — retrieve-then-generate reduces hallucination vs. parametric-only recall.
-- OWASP Top 10 for LLM Applications — LLM01 Prompt Injection, LLM06 Sensitive Information
-  Disclosure: both directly addressed by grounding + the posture/guarantees split (D-07).
-
-### 7.3 Proofs of concept
-
-| PoC | Status | Link | What it proved | What it disproved |
-|---|---|---|---|---|
-| OpenRouter embeddings viability | Not run | — | — | Deferred: assumed unreliable, so embeddings run locally (D-03) instead of risking the hot path |
-| Local MiniLM + cosine over ~50–150 chunks | Planned in build | — | Expected: instant retrieval, no vector DB needed at this scale | — |
+*Folded into §6.5 (Sources & Origins) to avoid duplication — peer products (Intercom Fin/Ada,
+Drift), the RAG citation (arXiv:2005.11401), and the OWASP LLM Top 10 (LLM01/LLM06) are cited there.*
 
 ## 8. Proposed direction
 
 ### 8.1 Approach — a configurable shell of reusable blocks
 
 A single Next.js (App Router) app on Vercel, structured as a **shell parameterized by a typed
-`ClientProfile`** and assembled from **named component seams**, each with a defined configuration
-surface and a maturity rating:
+`ClientProfile`** and assembled from **named component seams**.
 
-| Component | Responsibility | Configuration surface | Maturity |
-|---|---|---|---|
-| `KnowledgeRetriever` | Embed query, cosine top-k over the corpus | corpus source, k, threshold | MVP |
-| `LlmProvider` | Chat completion (streamed) | model id, params, base URL (OpenRouter) | MVP |
-| `LeadStore` | Persist a Lead | table/schema (Supabase) | MVP |
-| `Notifier` | Announce a new lead | impl: log today, email next | PoC (log) |
-| `ChatOrchestrator` | System prompt + retrieval + guardrails + escalation triggers | persona, policy, triggers | MVP |
-| `ClientProfile` | The one config that re-skins the block for a new client | corpus, persona, brand, model, escalation target, CTA | MVP |
+**What "parameterized" means here — the bar a component clears to count as reusable:**
 
-The browser renders a streaming chat UI. A server route embeds the user turn **locally** (MiniLM
-via transformers.js), retrieves top-k chunks from the **curated corpus**, composes a grounded
-prompt (answer only from context; **posture yes, guarantees no**; stay on-topic), and streams a
-completion via **OpenRouter**. **Escalation triggers** — explicit human request, pricing/quote,
-**"how do I get scored" (AI Maturity Index)**, **"how do I access the portal,"** security
-*guarantees*, or low-retrieval-confidence — offer a **lead form**; submitting writes a Lead to
-**Supabase** behind the pluggable `Notifier`. A persistent "Talk to an AI Strategist" CTA points to
-cadre.ai/contact.
+- **Forked** — copied and edited per client. Not reusable.
+- **Configurable** — behaviour changes via `ClientProfile`, no code edit.
+- **Productized** — Configurable *and* versioned, documented, with a second live deployment.
+
+| Component | Configuration surface | Level | Build hrs | Client #2 | Attaches to (other Cadre blocks) |
+|---|---|---|---|---|---|
+| `KnowledgeRetriever` | corpus, k, threshold | Configurable | ~1.5 | reused as-is | document analysis, scoring engines |
+| `LlmProvider` | model id, params, base URL | Configurable | ~1.0 | reused as-is | every LLM-backed block |
+| `ChatOrchestrator` | persona, policy, triggers | Configurable | ~1.0 | reused as-is | conversational systems |
+| `LeadStore` | table/schema (Supabase) | Configurable | ~0.75 | reused as-is | conversational systems |
+| `Notifier` | impl (log today, email next) | Configurable (1 impl) | ~0.5 | reused as-is | conversational systems |
+| `ClientProfile` | corpus, persona, brand, model, escalation, CTA | Configurable | ~1.0 | authored fresh (~1–2h) | the shell itself |
+
+**Reasoning in hours (the attachment-rate lens).** The six seams took ~6 engineering hours. Client
+#2 reuses five unchanged — only the `ClientProfile` + corpus are authored fresh (~1–2h), so the
+*marginal* cost of a second conversational-system engagement is ~1–2h vs. ~6h for the first:
+**~70% of the build amortizes**. Two seams — `KnowledgeRetriever` and `LlmProvider` — aren't
+conversational-specific; they attach to Cadre's **document-analysis and scoring-engine** blocks too,
+so their reuse compounds across the library, not just within conversational systems. That is where
+productization pays back first: productize the high-attachment seams (retrieval, LLM) before the
+conversational-only ones (`LeadStore`, `ChatOrchestrator`). The second profile
+(`CLIENT_PROFILE=northwind`) is the live proof the swap costs code-zero — moving the shell from
+Configurable toward Productized (a second deployment exists; versioning + docs are the remaining bar).
+
+The browser renders a streaming chat UI. A server route scores the user turn against the **curated
+corpus** (lexical retrieval — see L-12), composes a grounded prompt (answer only from context;
+**posture yes, guarantees no**; stay on-topic), and streams a completion via **OpenRouter**.
+**Escalation triggers** — explicit human request, pricing/quote, "how do I get scored" (AI Maturity
+Index), "how do I access the portal," security *guarantees*, or a query the corpus can't support —
+surface a **lead form**; submitting writes a Lead to **Supabase** behind the pluggable `Notifier`.
+A persistent, profile-driven CTA (e.g. "Talk to an AI Strategist") opens the lead form.
 
 ### 8.2 Information / data model sketch
 
-- **KbChunk** — `id`, `sourceUrl`, `title`, `text`, `embedding[]`. Built once at seed time from the
-  curated corpus (services, industries, **AI Maturity Index: eight-pillar framework, grade per area
-  with explanations + actionable insights**, portal description, security posture, booking).
+- **KbChunk** — `id`, `sourceUrl`, `title`, `text`. The curated corpus (services, industries,
+  **AI Maturity Index: eight-pillar framework, grade per area with insights**, portal, security
+  posture, booking). Lexically indexed at load (L-12); no embeddings.
 - **Lead** — `id`, `name`, `email`, `excerpt` (the escalating turn), `reason`, `status` (new),
   `createdAt`. The unit of escalation and the inbound team's work item. **Deliberately excludes**
   full transcripts (A-4).
@@ -256,7 +255,7 @@ cadre.ai/contact.
 |---|---|---|---|
 | D-01 | Next.js (App Router) full-stack on **Vercel + Supabase** | One repo, one deploy (lowest deployment risk — graded); Postgres serves leads + optional pgvector; fluent stack | Hard (post-deploy) |
 | D-02 | **Simple RAG** over a small **curated** Cadre corpus | Real grounding without crawl/vector-DB overhead; fits budget | Easy |
-| D-03 | **Local embeddings** (MiniLM/transformers.js) + brute-force cosine top-k; **no vector DB** at MVP | Removes unverified OpenRouter-embeddings dependency from hot path; instant at ~150 chunks | Easy |
+| D-03 | Retrieval without a vector DB at MVP. *Amended at build (L-12): shipped **lexical BM25** instead of local embeddings* | Instant, zero cold-start on serverless, deploys anywhere; corpus is tiny; interface keeps embeddings/pgvector a drop-in | Easy |
 | D-04 | Chat model = **Google Gemini 2.5 Flash via OpenRouter**, selected by env var | Cheap + fast + strong instruction-following protects the $5 budget and demo latency; swappable | Easy |
 | D-05 | Escalation writes a **Lead** to Supabase behind a pluggable **`Notifier`**; impl **today = Postgres + log**, **next = email to the inbound team** | Decouples capture from notification; email fits a San Diego B2B team without an external channel dependency | Easy |
 | D-06 | **No auth / no portal build**; the bot *explains* the portal and how access is arranged | Out of budget; not the graded core (§4) | Easy |
@@ -274,7 +273,7 @@ cadre.ai/contact.
 | $5 OpenRouter budget exhausted before/at review | Med | Med | Cheap model (D-04); cap max tokens/turn; light rate-limit; don't loop during testing |
 | Deployment fails under time pressure | Med | Med | Deploy a skeleton to Vercel **first** (D-01), iterate live |
 | Prompt injection / abuse of free-text field | Med | Med | System-prompt guardrails; bot has no privileged tools beyond lead insert; escape output in UI |
-| Local embedding model bloats bundle / cold start | Low | Med | Quantized MiniLM; precompute corpus embeddings at build; embed only the query at runtime |
+| Lexical retrieval misses a paraphrase (no semantics) | Low | Med | Small curated corpus; add embeddings/pgvector if misses appear (L-12) |
 
 ## 12. Success signals
 
@@ -283,9 +282,9 @@ cadre.ai/contact.
 - Every "can't answer / wants human / how-do-I-get-scored" path reliably **produces a Lead row**.
 - Total OpenRouter spend across build + testing + demo stays **well under $5**.
 - The deployed URL is reachable and responsive during the review.
-- *(Deferred by choice — D-11)* **Deflection rate** (share of sessions resolved without escalation)
-  is the metric that would prove ongoing value; we can't measure it until transcript logging with a
-  consent notice is added.
+- **Deflection rate** (share of sessions resolved without escalation) — **measured from
+  session-level outcome logs** (answered vs. escalated, no PII; NFR-006). Shipped, not deferred;
+  transcript logging (behind consent) would only add the *why*.
 
 ## 13. Dependencies & stakeholders
 
@@ -297,9 +296,8 @@ cadre.ai/contact.
 
 ### 13.2 Stakeholders
 
-- **Owning team:** Andrés Martiliano (candidate).
-- **Reviewing teams:** Cadre AI engineering (day-5 review).
-- **Customers / partners:** Cadre website visitors (prospects/clients).
+Solo build for the take-home: author (candidate), reviewer (Cadre engineering, day-5), end users
+(Cadre website visitors).
 
 ## 14. Out of scope / deferred
 
@@ -307,8 +305,9 @@ cadre.ai/contact.
   the corpus outgrows brute-force cosine.
 - **Email `Notifier` implementation** — *deferred until* core lead capture works; the seam exists
   now, the second impl is a small addition.
-- **Deflection-rate measurement (transcript logging + consent notice)** — *deferred until* someone
-  asks for the number; then we add it deliberately, with consent (see D-11, §12).
+- **Transcript-based analysis (the *why* behind escalations)** — *deferred until* someone needs it;
+  requires transcript logging behind a consent notice. Deflection *rate* itself already ships via
+  outcome logs (§12, NFR-006).
 
 ## 15. Open questions
 
@@ -345,6 +344,7 @@ cadre.ai/contact.
 |---|---|---|
 | 2026-09-07 | Andrés Martiliano | Initial draft. Self-critique: skipped (first-run baseline). |
 | 2026-09-07 | Andrés Martiliano | Rev 2 from review: D-07 split (posture yes/guarantees no); added D-09 (lead vs redirect), D-10 (configurable shell), D-11 (data minimization); booking/security/portal → assumptions A-1…A-4; AI Maturity Index promoted to KB + escalation trigger; WhatsApp cut (kept `Notifier` seam, next impl = email); open questions reduced to 2 self-owned items. Self-critique: skipped (offered to reviewer). |
+| 2026-09-07 | Andrés Martiliano | Rev 3 from build + review round 2: §8.1 gains the reuse-economics table (build/reuse hours, cross-block attachment) + the Forked/Configurable/Productized ladder; deflection reframed as *measured* from outcome logs (A-4, §12, §14; NFR-006), not deferred; D-03 amended to lexical retrieval (L-12); §7 folded into §6.5; §13.2 trimmed; §11 embedding-risk row replaced. Ships a second live profile (Northwind) making AC-16 demonstrable. |
 
 ---
 

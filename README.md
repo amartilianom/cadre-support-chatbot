@@ -46,6 +46,11 @@ ClientProfile (corpus · persona · brand · model · escalation target · CTA)
 Chat flow: `app/api/chat/route.ts` → orchestrator → retriever + LLM (streamed).
 Escalation: `components/LeadForm.tsx` → `app/api/lead/route.ts` → store → notifier.
 
+**Reuse, made demonstrable.** Set `CLIENT_PROFILE=northwind` and the *entire* bot re-skins — corpus,
+persona, brand, and CTA — with **zero code change** (a fictional second client ships in the repo).
+That's acceptance criterion AC-16 as a live demo, not a claim. The **reuse economics** (build vs.
+reuse hours, cross-block attachment, the Forked/Configurable/Productized bar) are in Concept Note §8.1.
+
 ## Model choice
 
 **Google Gemini 2.5 Flash via OpenRouter**, selectable by env (`OPENROUTER_MODEL`) with no code
@@ -66,8 +71,8 @@ The chat works with just `OPENROUTER_API_KEY`. Lead capture also needs Supabase 
 ## Deployment
 
 1. **Vercel** — `npx vercel` (or import the repo in the Vercel dashboard). Set env vars in the
-   project settings: `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, and (for leads) `SUPABASE_URL`,
-   `SUPABASE_KEY`.
+   project settings: `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `CLIENT_PROFILE` (`cadre` default, or
+   `northwind` to demo the reuse), and (for leads) `SUPABASE_URL`, `SUPABASE_KEY`.
 2. **Supabase** — create a project, run [`supabase/schema.sql`](supabase/schema.sql) in the SQL
    editor (creates the `leads` table + an INSERT-only RLS policy), then paste the URL + publishable
    key (`sb_publishable_…`) into `.env.local` (and Vercel). Until then, the bot runs fine and lead
@@ -81,9 +86,10 @@ analytics, no transcript logging (data minimization). Full rationale in the Conc
 
 **Deliberately deferred / what I'd do next:**
 - Semantic retrieval (embeddings/pgvector) once the corpus grows or paraphrase misses appear.
-- End-to-end lead-capture verification + an email `Notifier` for the inbound team.
-- Deflection-rate measurement (needs transcript logging behind a consent notice).
+- An email `Notifier` for the inbound team (the seam is in place; logging is the current impl).
+- Transcript-based *why* analysis behind a consent notice (deflection *rate* already ships via outcome logs).
 - Automated tests + a formal latency measurement.
+- A third+ client profile / per-tenant routing (the shell already supports it via `CLIENT_PROFILE`).
 
 ## Assumptions (gaps the brief left to us — decided, not deferred)
 
@@ -114,7 +120,7 @@ Honest status against [`docs/spec.md`](docs/spec.md). `✅ PASS` = implemented &
 | FR-015 decline pricing | ✅ PASS | verified |
 | FR-016 off-topic decline | ✅ PASS | verified |
 | FR-020 escalation offers form + CTA | ◐ PARTIAL | CTA is persistent + prompt-nudged, not auto-trigger-detected |
-| FR-021 persist lead (name/email/excerpt/reason) | ◐ PARTIAL | `lib/leads/store.ts` coded; not end-to-end tested (needs Supabase) |
+| FR-021 persist lead (name/email/excerpt/reason) | ✅ PASS | `lib/leads/store.ts`; verified live (row inserted — L-15) |
 | FR-022 no transcript persistence | ✅ PASS | `store.ts` stores only 4 fields |
 | FR-023 invoke Notifier on save | ✅ PASS | `app/api/lead/route.ts` |
 | FR-024 reject invalid email | ✅ PASS | `route.ts` email regex |
@@ -126,10 +132,11 @@ Honest status against [`docs/spec.md`](docs/spec.md). `✅ PASS` = implemented &
 | NFR-004 secrets server-side, output escaped | ✅ PASS | env server-only; React escaping |
 | NFR-005 privacy / data minimization | ✅ PASS | only 4 lead fields stored |
 | NFR-001 latency p95 target | ◐ PARTIAL | streaming feels fast; not formally load-tested |
-| NFR-006 per-request outcome logging | ◐ PARTIAL | errors + leads logged; not a uniform correlation-id per outcome |
+| NFR-006 session-level outcome logging | ✅ PASS | `lib/log.ts` — answered/escalated/error + session id, no PII |
 | TC-002 OpenRouter server key, model env | ✅ PASS | `lib/llm/openrouter.ts` |
 | TC-003 local embeddings | ✗ ABSENT (amended) | replaced by lexical retrieval — see `decisions.md` L-12 |
 | TC-010 ClientProfile isolation | ✅ PASS | `client-profile.ts` |
+| AC-16 re-skin by config (2nd profile) | ✅ PASS | `CLIENT_PROFILE=northwind` swaps corpus/persona/brand/CTA, zero code — verified live (L-15) |
 | TC-011 Notifier seam | ✅ PASS | `lib/leads/notifier.ts` |
 | TC-040 XSS escape | ✅ PASS | React auto-escaping; no `dangerouslySetInnerHTML` |
 | TC-041 SQL injection | ✅ PASS | Supabase parameterized insert |
@@ -137,10 +144,11 @@ Honest status against [`docs/spec.md`](docs/spec.md). `✅ PASS` = implemented &
 | TC-043 rate limit | ✅ PASS | `lib/rate-limit.ts` |
 | TC-044 prompt-injection mitigation | ◐ PARTIAL | system-prompt guardrail; not adversarially hardened |
 | S-01…S-07 scenarios | ✅ PASS | verified live (see `decisions.md` L-13) |
-| S-08 lead submission | ◐ PARTIAL | coded; not live-verified pending Supabase |
+| S-08 lead submission | ✅ PASS | verified live (ok:true + id; row in Supabase) |
+| S-04a / S-06a pushback (hold the line) | ✅ PASS | insisted portal-URL / ballpark-price both declined live (L-15) |
 | Live public deploy | ✅ PASS | https://cadre-test.vercel.app; live chat + guardrails verified |
 | Automated test suite | ✗ ABSENT | manual scenario verification only (budget trade-off) |
-| Deflection-rate metric | ✗ ABSENT | deferred by design (needs consent-based logging — D-11) |
+| Deflection-rate metric | ✅ PASS | measurable from session outcome logs — no transcripts/consent needed (NFR-006) |
 | WhatsApp notifier | ✗ ABSENT | cut; `Notifier` seam kept, email is the next impl (D-05) |
 
 ---

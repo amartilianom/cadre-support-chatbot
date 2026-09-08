@@ -427,8 +427,37 @@ answers — verified with a real call. No model swap needed.
 - MVP F1–F4 built + chat/guardrails verified locally: **22:13**
 - README + conformance audit done; deployed to Vercel (https://cadre-test.vercel.app).
 - **Live deploy verified:** production env vars set; live `/api/chat` returns grounded answers.
-  Lead endpoint returns the graceful fallback until `supabase/schema.sql` is run (table not yet
-  created) — that's the one remaining step for end-to-end leads.
+- Supabase key fix (publishable + INSERT-only RLS + grant) → **leads verified live** (~22:5x).
+
+---
+
+## L-15 · 23:25 · Review round 2 (your spec observations) — all applied
+**Decided by:** you (6 sharp observations + cuts); me applying. **Honest note:** your observations
+were *thesis-level* (reuse economics, demonstrability) and sharper than my own code-hygiene review.
+
+**Code (made the reuse thesis demonstrable):**
+- **Second client profile** — lifted corpus/persona/brand/greeting/suggestions/CTA into
+  `ClientProfile`, selected by `CLIENT_PROFILE` env var; added a fictional **Northwind Freight**.
+  Verified live: Northwind answers freight Qs and **declines Cadre-only ones** with its own CTA.
+  This turns **AC-16** from an assertion into a live demo. (Your #3.)
+- **Session-level outcome logging** (`lib/log.ts`) — answered/escalated/error + session id, no PII.
+  **Deflection rate is now measurable** from logs alone; reframed A-4/§12/§14/NFR-006 from
+  "can't measure" to "measured, no consent needed." (Your #4.)
+- System prompt made client-agnostic; `crypto.randomUUID()` session ids.
+
+**Docs:**
+- Concept §8.1: **reuse-economics table** (build vs. reuse hours, cross-block attachment) +
+  **Forked/Configurable/Productized** ladder; Notifier re-rated Configurable (consistency). (#1, #2, #6.)
+- Spec: added **§4.4** (closes the 4.3→4.5 gap) + TC-030; **S-04a/S-06a pushback variants** — and
+  **verified live** the bot holds the line on an insisted portal-URL and a ballpark-price. (#5, #6.)
+- Cut §7 (folded into §6.5) and trimmed §13.2 stakeholders. (Your cuts.)
+- Swept the stale **embeddings→lexical** language across both docs (D-03, TC-003, ER diagram, §13).
+
+**Verifications this round (live):** lead insert `ok:true`; Northwind swap; both pushback declines;
+build green; lint clean.
+**Not added:** automated tests (still ABSENT in the audit) — offered, awaiting your call.
+**Deploy:** code redeployed to prod (Cadre default); docs don't affect runtime.
+**Your gate:** you're holding the zip for a human review — nothing is zipped/submitted.
 
 ---
 

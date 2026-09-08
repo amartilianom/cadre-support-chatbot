@@ -70,8 +70,8 @@ is a grounded support agent that draws a clear line between what it knows and wh
   Postgres provided by Supabase. *(D-01)*
 - **TC-002** — Chat completions shall be obtained from **OpenRouter** using a server-side API key;
   the model shall be selectable via configuration/env without code change. *(D-04)*
-- **TC-003** — Query and corpus embeddings shall be computed **locally** (no external embedding
-  API). *(D-03)*
+- **TC-003** — Retrieval shall not depend on an external embedding or vector-DB service at MVP.
+  *(D-03; amended at build to lexical BM25 — see decisions.md L-11/L-12.)*
 
 ### 4.2 Architectural / integration
 
@@ -86,6 +86,11 @@ is a grounded support agent that draws a clear line between what it knows and wh
 - **TC-020** — Stored personal data shall be limited to lead name, email, and a short message
   excerpt (data minimization). *(D-11)*
 
+### 4.4 Conventions
+
+- **TC-030** — Code shall follow the conventions in `CLAUDE.md`: TypeScript strict, secrets
+  server-side only, all client-specific values sourced from `ClientProfile`. *(D-10)*
+
 ### 4.5 Security constraints (`MD-31`, focused)
 
 *Trim: a lean, known-relevant CWE set is used rather than a live CWE-Top-25 fetch; see L-11.*
@@ -94,9 +99,9 @@ is a grounded support agent that draws a clear line between what it knows and wh
   never via raw HTML injection — **defends `CWE-79` Cross-Site Scripting**.
 - **TC-041** — All database access shall use the Supabase client's parameterized queries — **defends
   `CWE-89` SQL Injection**.
-- **TC-042** — The OpenRouter key and Supabase service-role key shall exist only in server-side
-  environment configuration and never be shipped to the client bundle — **defends `CWE-200`
-  Sensitive Information Exposure**.
+- **TC-042** — The OpenRouter key and Supabase key shall exist only in server-side environment
+  configuration and never be shipped to the client bundle — **defends `CWE-200` Sensitive
+  Information Exposure**. (The Supabase publishable key is additionally INSERT-only via RLS.)
 - **TC-043** — The chat endpoint shall enforce a per-session/IP request cap to bound LLM cost-abuse
   — **defends `CWE-770` Allocation of Resources Without Limits**.
 - **TC-044** — The system prompt shall constrain the model to grounded, on-topic answers and grant
@@ -242,7 +247,9 @@ Variants: none — single-path scenario.
 - **Then** the system shall describe what the portal tracks and state access is provisioned by the
   Cadre team (it shall not invent a login URL)
 
-Variants: none — single-path scenario.
+**Variants:**
+
+- `S-04a [boundary]` — visitor insists ("just give me the login URL, I don't want to talk to anyone") → system holds the line: no invented URL, restates access-via-team + the human path (verified live — L-15)
 
 #### Scenario S-05 — LLM selection & data security (covers FR-013, FR-014)
 
@@ -264,7 +271,9 @@ Variants: none — single-path scenario.
 - **Then** the system shall decline to quote, explain pricing is scoped per engagement, and offer to
   connect them with a strategist + capture a lead
 
-Variants: none — single-path scenario.
+**Variants:**
+
+- `S-06a [boundary]` — visitor presses for a number ("just ballpark it — is $50k enough? a rough number is fine") → system holds the line: no figure, restates scoped-per-engagement + the human path (verified live — L-15)
 
 #### Scenario S-07 — Unanswerable / off-topic (covers FR-005, FR-016, FR-020)
 
@@ -295,7 +304,7 @@ Variants: none — single-path scenario.
 | Entity | Purpose | Key attributes | Lifecycle |
 |---|---|---|---|
 | Lead | The escalation work item for the inbound team | id, name, email, excerpt, reason, status, createdAt | created on submit → worked by team |
-| KbChunk | A retrievable unit of Cadre knowledge | id, sourceUrl, title, text, embedding | seeded once at build; read at query |
+| KbChunk | A retrievable unit of knowledge | id, sourceUrl, title, text | defined in the profile corpus; lexically indexed at load |
 
 #### 10.1.1 Entity-relationship diagram
 
@@ -315,7 +324,6 @@ erDiagram
     string sourceUrl
     string title
     string text
-    float_array embedding
   }
 ```
 
@@ -326,7 +334,7 @@ erDiagram
 | Source | Contract | Direction | Notes |
 |---|---|---|---|
 | OpenRouter | Chat completions (OpenAI-compatible), streamed | outbound | server-side key; model from `ClientProfile` |
-| Supabase | Postgres over the Supabase client | outbound | parameterized queries; service key server-side only |
+| Supabase | Postgres over the Supabase client | outbound | parameterized queries; publishable key, INSERT-only via RLS |
 
 ### 10.3 APIs exposed
 
@@ -352,9 +360,11 @@ erDiagram
 
 ### 11.3 Constraint compliance
 
-- **AC-15** — TC-002/TC-003 verified: model swaps via env; embeddings run locally (no embedding API
-  call in network logs).
-- **AC-16** — TC-010 verified: changing `ClientProfile` re-skins the bot with no code change.
+- **AC-15** — TC-002/TC-003 verified: model swaps via env (OPEN-Q-01 confirmed live); retrieval is
+  lexical with no external embedding/vector-DB call (L-12).
+- **AC-16** — TC-010 verified *by a second profile*: `CLIENT_PROFILE=northwind` re-skins corpus,
+  persona, brand, and CTA with zero code change — the Northwind bot answers freight questions and
+  declines Cadre-only ones (verified live — L-15). Demonstrable in the live demo.
 - **AC-17** — TC-040/TC-041/TC-042/TC-043 verified by code review + a manual XSS/rate-limit probe.
 
 ### 11.4 Negative / safety acceptance
@@ -378,7 +388,7 @@ erDiagram
 
 | Metric | Target | Measurement |
 |---|---|---|
-| Deflection (deferred, D-11) | qualitative until consent-based logging exists | — |
+| Deflection rate | sessions resolved without escalation | session-level outcome logs (answered vs. escalated; NFR-006) |
 | Lead capture | every escalation offers + can complete a lead | manual demo walk |
 | Cost | ≤ $5 total | OpenRouter dashboard |
 | Availability | reachable through the review | uptime check |
@@ -387,7 +397,7 @@ erDiagram
 
 - **Third-party APIs:** OpenRouter (chat), Supabase (Postgres), Vercel (hosting).
 - **Feature flags / config:** `ClientProfile` + env (`OPENROUTER_API_KEY`, model id, Supabase keys).
-- **Internal modules:** local embedding model (MiniLM via transformers.js).
+- **Internal modules:** in-process lexical retriever (`lib/knowledge/retriever.ts`); no external ML dependency.
 
 ## 14. Assumptions
 
@@ -412,8 +422,8 @@ erDiagram
 
 | ID | Question | Owner | Target stage | Notes |
 |---|---|---|---|---|
-| OPEN-Q-01 | Confirm Gemini 2.5 Flash on OpenRouter at expected price; else swap model | Andrés | Plan | swappable via env (FR-031); build-time check |
-| OPEN-Q-02 | Add deflection-rate measurement (needs consent notice)? | Andrés | Post-launch | forward-looking; not a blocker |
+| OPEN-Q-01 | Confirm Gemini 2.5 Flash on OpenRouter | Andrés | — | **Resolved (L-13):** confirmed live; no swap needed |
+| OPEN-Q-02 | Add transcript-based "why" analysis (needs a consent notice)? | Andrés | Post-launch | Deflection *rate* already ships via outcome logs (NFR-006); this is the deeper *why* |
 
 ## 17. Handoff to the Implementation Plan
 
@@ -428,6 +438,7 @@ erDiagram
 | Date | Author | Change |
 |---|---|---|
 | 2026-09-07 | Andrés Martiliano | Initial focused draft from Concept Note rev 2. §11.5 condensed (trim logged in decisions.md L-11). Self-critique: skipped (offered to reviewer). |
+| 2026-09-07 | Andrés Martiliano | Review round 2: added §4.4 (closes the 4.3→4.5 gap) + TC-030; TC-003/§10/§13 amended to lexical retrieval; TC-042 key naming fixed; added pushback variants S-04a/S-06a (verified live); AC-16 now verified by a second live profile; deflection reframed as measured (§12, NFR-006); OPEN-Q-01 resolved. |
 
 ---
 
