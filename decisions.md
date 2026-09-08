@@ -425,4 +425,19 @@ answers — verified with a real call. No model swap needed.
 
 ### Phase clock
 - MVP F1–F4 built + chat/guardrails verified locally: **22:13**
-- Remaining: README + conformance audit (in progress) · your Vercel deploy · your Supabase setup.
+- README + conformance audit done; deployed to Vercel (https://cadre-test.vercel.app).
+
+---
+
+## L-14 · Supabase key model: publishable key + INSERT-only RLS (least privilege)
+**Decided by:** you flagged that `service_role` naming is deprecated and you provided a **publishable
+key** (`sb_publishable_...`); I chose the design around it.
+**Design:** the app uses the **publishable key server-side**, and `schema.sql` enables RLS with an
+**INSERT-only policy** for the anon role. Net effect: the app can *submit* leads but can never read,
+update, or delete them — a leaked key can't exfiltrate leads. This is a stronger posture than
+shipping a service-role/secret key, and it uses the key you already provided.
+**Changes:** env var renamed `SUPABASE_SERVICE_ROLE_KEY` → `SUPABASE_KEY` (code keeps a fallback);
+`schema.sql` gains the insert policy; README/CLAUDE/.env.example updated.
+**Known limit:** a public-form insert policy means direct inserts are possible if the key were
+exposed; app-layer rate limiting mitigates, and the key stays server-side. Acceptable for MVP.
+**Reversible:** trivially — swap to a `sb_secret_...` key + drop the policy if preferred.

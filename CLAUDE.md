@@ -49,8 +49,9 @@ Escalation: `components/LeadForm.tsx` → `app/api/lead/route.ts` → `LeadStore
 
 - **Next.js (App Router) + TypeScript + Tailwind**, deployed on **Vercel**. Postgres via **Supabase**.
 - **TypeScript strict.** No `any` in committed code; type the seam interfaces explicitly.
-- **Secrets are server-side only.** `OPENROUTER_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` never appear
-  in a client component, `NEXT_PUBLIC_*`, or the bundle. Leads are written from `/api/lead` (server).
+- **Secrets are server-side only.** `OPENROUTER_API_KEY` and `SUPABASE_KEY` never appear in a client
+  component, `NEXT_PUBLIC_*`, or the bundle. Leads are written from `/api/lead` (server); the
+  publishable key is INSERT-only via RLS, so a leak can't read leads back.
 - **Escape all model/user output** in the UI (React default; never `dangerouslySetInnerHTML`).
 - **Cost discipline (hard).** Total OpenRouter spend must stay **< $5**. Cap output ≤ 800 tokens/turn,
   retrieved context ≤ ~2k tokens. Don't loop the model in dev. The chat endpoint is rate-limited.

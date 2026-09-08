@@ -12,6 +12,14 @@ create table if not exists public.leads (
   created_at timestamptz not null default now()
 );
 
--- Leads are written server-side with the service-role key (which bypasses RLS).
--- Enable RLS with no public policy so the anon key can neither read nor write leads.
+-- The app writes leads server-side with the publishable key (anon role), which respects RLS.
+-- Enable RLS and grant INSERT only — so the key can submit leads but can never read, update, or
+-- delete them (least privilege). Reading leads is done from the Supabase dashboard.
 alter table public.leads enable row level security;
+
+drop policy if exists "public can submit leads" on public.leads;
+create policy "public can submit leads"
+  on public.leads
+  for insert
+  to anon
+  with check (true);

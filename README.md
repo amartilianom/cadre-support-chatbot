@@ -67,10 +67,11 @@ The chat works with just `OPENROUTER_API_KEY`. Lead capture also needs Supabase 
 
 1. **Vercel** — `npx vercel` (or import the repo in the Vercel dashboard). Set env vars in the
    project settings: `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, and (for leads) `SUPABASE_URL`,
-   `SUPABASE_SERVICE_ROLE_KEY`.
+   `SUPABASE_KEY`.
 2. **Supabase** — create a project, run [`supabase/schema.sql`](supabase/schema.sql) in the SQL
-   editor to create the `leads` table, then paste the URL + service-role key into `.env.local` (and
-   Vercel). Until then, the bot runs fine and lead submissions surface the direct-contact fallback.
+   editor (creates the `leads` table + an INSERT-only RLS policy), then paste the URL + publishable
+   key (`sb_publishable_…`) into `.env.local` (and Vercel). Until then, the bot runs fine and lead
+   submissions surface the direct-contact fallback.
 
 ## Scope decisions
 
