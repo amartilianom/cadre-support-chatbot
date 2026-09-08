@@ -236,3 +236,88 @@ Anthropic, Google, Microsoft, AWS, Salesforce, Snowflake + OpenRouter.
 - **[OPEN-Q-4] Booking link** — no Calendly; the real CTA is the /contact form + email/phone.
   Bot points there. (For you to confirm if you have a real scheduling link to use.)
 - **[OPEN-Q-5] WhatsApp target number** — needed only for the stretch notification. For you.
+
+---
+
+## L-08 · 21:15 · JD reframes the target: build the bot as a *reusable, configurable block*
+**Decided by:** evidence — read the real job posting (`Staff Product Architect.html`, Gem job
+board, Colombia Remote, comp $7–8k/mo, posted 2026-08-20). I was wrong earlier that the JD would
+be marginal; recording the correction and its consequences.
+
+**What the role actually is:** Cadre sells solutions as **"blocks"** — productized engagements
+(document analysis, data/pipeline, scoring engines, **conversational systems**) bought from a
+library. The Staff Product Architect **owns the technical layer beneath that library**: decompose
+blocks into **named, reusable, configurable components** (each with a *defined configuration
+surface*, owner, maturity rating), track **reuse economics** (attachment rate, net-new hours as %
+of quoted hours, margin), and hold the **build-once-configurably-reuse-many** line.
+
+**Consequence for THIS take-home (the chatbot IS a "conversational system" block):** the highest-
+leverage move is to build and pitch the bot **as a configurable, reusable component**, not a
+one-off. This maps straight onto the graded dimensions (System Design 25%, Communication 10%) AND
+the role's core competency. Concrete adjustments (to weave into the Concept Note revision):
+- **Elevate a first-class configuration surface** — a single typed client config
+  (`ClientProfile`) that parameterizes: knowledge corpus, system-prompt/persona, brand, model,
+  escalation/notify target, booking CTA. "Swap the config → a new client's bot." This embodies
+  "built once, configurably, reused across every client."
+- **Name the component boundaries** the JD would grade: `KnowledgeRetriever` (RAG), `LlmProvider`
+  (OpenRouter, swappable — already D-04/D-03), `LeadStore` (repo), `Notifier` (pluggable — already
+  D-05), `ChatOrchestrator`. Give each a one-line configuration surface + maturity rating, echoing
+  the JD's own vocabulary.
+- **Day-5 narrative:** speak in reuse-vs-net-new + commercial (hours/cost/margin) terms; frame
+  CLAUDE.md/docs as "standards people actually follow."
+**Stack validation:** JD's named stack = TypeScript/Node, Python, Next.js, Postgres/Supabase,
+Vercel/Render/AWS. Our L-05 pick (Next.js + Supabase + Vercel) is dead-on. Retrieval is explicitly
+named as a valued pattern → RAG (D-02) is well-aligned.
+**Boundary (important):** the JD's internal economics language (attachment rate, margin) is
+*hiring/architecture framing* — it belongs in our **docs/narrative**, NOT in the customer-facing
+bot's knowledge corpus. The corpus stays public-facing facts only (L-07).
+**Does NOT change:** the 5 open-question answers, or the core feature scope (F1–F4). It sharpens
+*how we architect and narrate*, not *what we build*.
+**Reversible:** easily — these are framing/abstraction choices applied before implementation.
+
+---
+
+## L-09 · 21:27 · Concept Note revision from your review (all points accepted)
+**Decided by:** you (deep review), me applying. Every point accepted; none sanded down.
+
+**Framing principle you set:** an open question owned by "Cadre" (unanswerable before submission)
+reads as a *stall*; a defended *assumption* reads as *judgment*. So booking/security/portal move
+from `OPEN-Q` → **stated assumptions with rationale** (new Concept §6.6 A-1…A-4).
+
+**Point-by-point:**
+1. **Booking (was OPEN-Q-01) → A-1.** Verified: cadre.ai/contact form + hello@gocadre.ai + phone;
+   **no scheduling integration anywhere.** Bot points to contact path AND captures a lead same
+   turn. "If Cadre has an internal scheduler, it's a KB change, not a code change." (cadreai.com
+   302→cadre.ai; domain confirmed.)
+2. **Data security (was OPEN-Q-02) — the real bug.** Brief lists "LLM selection and data security"
+   as a scenario the bot *should answer*; old **D-07 declined it** → contradicts the brief.
+   **Fix (top priority): D-07 split → "posture yes, guarantees no."** Bot answers posture
+   (model-agnostic across OpenAI/Anthropic/Google/Microsoft/AWS; selection per use case;
+   server-side key handling; what THIS bot retains); declines only guarantees (certs, retention
+   periods, contractual terms) + pricing.
+3. **Portal (was OPEN-Q-03) → A-3 + behavior.** Cadre publicly describes it ("centralized portal
+   to track tools, agents, training, and results"). Bot answers *what it is* fully; routes only on
+   *how to get in* ("provisioned by your Cadre team as part of an engagement"). §4 non-goal (don't
+   *build* it) stays.
+4. **Transcripts (was OPEN-Q-06) → D-11 data minimization.** Persist only name/email/excerpt — no
+   consent basis to log anonymous public-site conversations. Named trade-off: **can't measure
+   deflection rate** (the metric that proves the bot works) until a consent notice is added.
+5. **WhatsApp — CUT, not stubbed.** It was in the C4 diagram (reads as design, not stretch) and
+   invites "why WhatsApp for a San Diego B2B consultancy?" Removed from diagram/deps/deferred.
+   Keep the `notify(lead)` seam (D-05): impl today = Postgres+log; second impl = **email to the
+   inbound team**; WhatsApp only if that's where the team works (unknown). OPEN-Q-04 dropped.
+6. **AI Maturity Index — under-covered → fixed.** Brief names it twice; it's the most
+   Cadre-specific question. Add a KB entry (**eight-pillar framework, grade per area with
+   explanations + actionable insights**) and make **"how do I get scored" an escalation trigger**.
+7. **Lead capture was an unstated scope choice → D-09.** Brief says "escalate *or redirect*." We
+   chose a structured Lead (table+form) over a near-zero-cost redirect. Now a *decision* with the
+   redirect-only alternative named and **rejected** (redirect drops the context the strategist
+   needs) — so it reads as judgment, not scope creep against "cut aggressively."
+
+**Plus (your prior confirmation): D-10 configurable shell.** Bot is a reusable "conversational
+system" block: a typed `ClientProfile` parameterizes corpus/persona/brand/model/escalation/CTA;
+named seams `KnowledgeRetriever` · `LlmProvider` · `LeadStore` · `Notifier` · `ChatOrchestrator`.
+
+**Housekeeping:** JD HTML (`Staff Product Architect.html` + `_files/`) git-ignored — contains PII
+(phone, personal email, salary form), not a deliverable.
+**Reversible:** all pre-implementation; cheap.

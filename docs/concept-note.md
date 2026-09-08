@@ -1,6 +1,6 @@
 # Cadre AI Support Chatbot — Concept Note
 
-> **Status:** Draft · **Date:** 2026-09-07 · **Owner:** Andrés Martiliano
+> **Status:** Draft (rev 2) · **Date:** 2026-09-07 · **Owner:** Andrés Martiliano
 >
 > **Reviewers:** Cadre AI review panel (day-5 live review)
 >
@@ -8,14 +8,16 @@
 
 ## 1. TL;DR
 
-We are building a **customer-support chatbot for Cadre AI's inbound team** that answers the most
-common prospect/client questions (what Cadre does, industry fit, the AI Maturity Index, portal
-access, LLM/security posture, how to book a call) and **escalates cleanly to a human by capturing
-a lead** when it can't or shouldn't answer. It is for Cadre's website visitors; it exists so the
-inbound team stops spending time on repetitive questions. **The single most important decision:**
-the bot answers **only from a curated, retrieval-grounded Cadre knowledge base and declines
-(routing to a strategist) on anything it can't ground — especially pricing** — because a
-consultancy's support bot inventing facts is worse than one that says "let me connect you."
+We are building a **customer-support chatbot for Cadre AI's inbound team** — implemented as a
+**configurable, reusable "conversational system" block**, not a one-off. It answers the common
+prospect/client questions (what Cadre does, industry fit, **the AI Maturity Index and how to get
+scored**, portal access, its **LLM-selection and data-security posture**, how to book a call) from
+a curated, retrieval-grounded knowledge base, and **escalates by capturing a lead** when it can't
+or shouldn't answer. **The single most important decision:** the bot **answers posture but never
+invents guarantees or pricing** — grounded answers where Cadre has published a fact, a clean
+"let me connect you" where it hasn't. The architecture is a **shell parameterized by a typed
+`ClientProfile`** (corpus, persona, brand, model, escalation target, CTA), so the same block
+re-skins for the next client by swapping config, not code.
 
 This is a take-home challenge (recommended 4–6h build; ~4h budgeted). Scope is deliberately cut to
 a small number of features that work over a large number that don't.
@@ -27,28 +29,29 @@ merely curious. Every repetitive inquiry a strategist answers by hand is time no
 high-value conversations.
 
 - **Pain 1 — Repetitive triage.** "What do you do / do you work with my industry / how do I book a
-  call?" are asked constantly and have stable answers, yet consume human time.
-- **Pain 2 — Slow first response.** A prospect who has to wait for a human to answer a basic
-  question is a prospect who may leave. A 24/7 first-touch that can also *capture the lead* keeps
-  them engaged.
+  call / what's the AI Maturity Index?" are asked constantly and have stable answers, yet consume
+  human time.
+- **Pain 2 — Slow first response.** A prospect who waits for a human to answer a basic question may
+  leave. A 24/7 first-touch that also *captures the lead* keeps them reachable.
 - **Pain 3 — Inconsistent / risky answers.** Free-form human answers to sensitive questions
-  (pricing, data security) vary. A grounded bot with an explicit "decline and route" policy is
-  more consistent and safer than ad-hoc replies.
+  (pricing, data security) vary. A grounded bot with an explicit "posture yes, guarantees no"
+  policy is more consistent and safer than ad-hoc replies.
 
 ## 3. Goals
 
-- Deflect the most common inbound questions with **accurate, Cadre-grounded** answers.
-- **Never fabricate** — unknown/sensitive questions (pricing, security specifics, portal login)
-  are declined and routed to a human, with the lead captured.
-- Provide a **reliable escalation path**: capture name/email/context as a lead the inbound team
-  can act on, and surface the "Talk to an AI Strategist" call-to-action.
-- Ship a **deployed, publicly reachable MVP** with a clean architecture story and an honest
-  account of what was cut.
+- Deflect the most common inbound questions with **accurate, Cadre-grounded** answers — including
+  the Cadre-specific ones (AI Maturity Index, portal, security posture).
+- **Answer posture, never fabricate specifics** — pricing, certifications, retention terms, and
+  portal logins are routed to a human, with the lead captured.
+- Provide a **reliable escalation path**: capture name/email/context as a lead the inbound team can
+  act on, and surface the "Talk to an AI Strategist" call-to-action.
+- Ship it **as a reusable block**: a configurable shell with clean component seams, so the build
+  pays off across future client deployments — and a **deployed, public MVP** to prove it.
 
 ## 4. Non-goals
 
-- **We are not building authentication or a real client portal.** The bot *explains* how portal
-  access works; it does not implement login, dashboards, or account state.
+- **We are not building authentication or a real client portal.** The bot *explains what the
+  portal is and how access is arranged*; it does not implement login, dashboards, or account state.
 - **We are not building a pricing engine or quoting anything.** Pricing is policy-declined.
 - **We are not crawling or indexing the full cadre.ai site.** Knowledge is a small curated corpus.
 - **We are not building an admin console, multi-tenant support, or conversation analytics.**
@@ -56,50 +59,53 @@ high-value conversations.
 
 ## 5. Vision / desired end state
 
-A visitor lands on Cadre's site, opens the chat, and asks "Do you work with private-equity-backed
-manufacturers?" The bot answers from Cadre's real positioning — yes, naming the relevant
-industries and services — and offers to book a strategy call. Another asks "What's your pricing?"
-The bot explains that pricing is scoped per engagement, declines to quote, and offers to connect
-them with a strategist — capturing their email as a lead in the same breath. A third asks
-something off-topic or beyond the corpus; the bot recognizes the boundary, doesn't bluff, and
-escalates. The inbound team wakes up to a short list of qualified leads instead of a full inbox of
-FAQs.
+A visitor opens the chat and asks "Do you work with private-equity-backed manufacturers?" The bot
+answers from Cadre's real positioning — yes, naming the relevant industries and services — and
+offers to book a strategy call. Another asks "What's the AI Maturity Index and how do I get
+scored?" The bot explains the eight-pillar framework and treats "how do I get scored" as a handoff,
+capturing the lead. A third asks "What's your pricing?" The bot explains pricing is scoped per
+engagement, declines to quote, and captures their email in the same breath. The inbound team wakes
+up to a short list of qualified leads instead of a full inbox of FAQs — and because the bot is a
+**configurable block**, the next client's bot is a new `ClientProfile`, not a new project.
 
 ### 5.1 System context diagram
 
 ```mermaid
 C4Context
   Person(visitor, "Website visitor", "Prospect / client / curious")
-  System(bot, "Cadre Support Chatbot", "Grounded chat + lead capture")
+  Person(team, "Cadre inbound team", "Acts on captured leads")
+  System(bot, "Cadre Support Chatbot", "Grounded chat + lead capture (configurable block)")
   System_Ext(router, "OpenRouter", "Hosted chat model access")
-  System_Ext(db, "Supabase Postgres", "Lead + KB storage")
-  System_Ext(notify, "WhatsApp (stretch)", "New-lead notification")
+  System_Ext(db, "Supabase Postgres", "Lead + knowledge storage")
   Rel(visitor, bot, "Asks questions / leaves contact")
   Rel(bot, router, "Chat completion (streamed)")
   Rel(bot, db, "Read KB chunks · write leads")
-  Rel(bot, notify, "Notify on new lead")
+  Rel(bot, team, "Notify on new lead (log today; email next)")
 ```
 
 ### 5.2 Security posture (`MD-31`)
 
 - **Feature exposure** — External, untrusted HTTP input from anonymous public website visitors
   (free-text chat + a lead form). Prompt-injection and abuse of the free-text field are in scope.
-- **Data sensitivity** — Low-volume PII only: lead **name + email + message**. No payment data, no
-  credentials, no regulated PHI. The OpenRouter API key is a sensitive secret (server-side only).
+- **Data sensitivity** — Low-volume PII only: lead **name + email + a short message excerpt**. No
+  payment data, no credentials, no regulated PHI. The OpenRouter API key is a sensitive secret
+  (server-side only).
 - **Deployment surface** — Public serverless endpoints on Vercel (Next.js route handlers);
   Postgres reached server-side via Supabase with the service role key never exposed to the client.
 
 > These lines select the CWE Top 25 categories the Spec §4.5 must address — primarily injection
-> (XSS in chat rendering, SQL/NoSQL injection via the data layer), secrets exposure, and
+> (XSS in chat rendering, SQL injection via the data layer), secrets exposure, and
 > resource-exhaustion / cost-abuse of the metered LLM budget.
 
 ## 6. Context & background
 
-- **Existing system** — None. Greenfield repository initialized for this challenge. Only inputs
-  are the brief, the assessment PDF (`Cadre_AI_Chatbot_Take_Home_Candidate_v1.1.pdf`), and public
-  cadre.ai content.
-- **Related work** — Cadre is an **Official OpenAI Service Partner**; publicly lists partners
-  OpenAI, Anthropic, Google, Microsoft, AWS, Salesforce, Snowflake (+ OpenRouter for model access).
+- **Existing system** — None. Greenfield repository initialized for this challenge. Only inputs are
+  the brief, the assessment PDF (`Cadre_AI_Chatbot_Take_Home_Candidate_v1.1.pdf`), the role's job
+  description (Staff Product Architect), and public cadre.ai content.
+- **Related work** — Cadre is an **Official OpenAI Service Partner** with frontier access via
+  Anthropic and OpenAI; publicly lists partners OpenAI, Anthropic, Google, Microsoft, AWS,
+  Salesforce, Snowflake (+ OpenRouter for model access). The role sells solutions as reusable
+  **"blocks,"** one of which is *conversational systems* — this bot is exactly that block.
 - **Organisational context (constraints)** — 4-hour build budget; graded on 5 weighted dimensions
   (Claude Code proficiency 30%, System Design 25%, Dev Speed & Scope 20%, Code Quality 15%,
   Communication 10%); hard deliverables: a live public URL, `CLAUDE.md` + `plan.md` at root, a zip
@@ -112,36 +118,59 @@ C4Context
 
 **Industry-standard evidence**
 
-- *Regulatory:* GDPR/CCPA lite — lead form collects name+email; a consent line + not over-
-  collecting is the only obligation at this scale. No HIPAA/PCI (no PHI/payment data).
-- *Architectural:* 12-factor config (secrets via env, not committed); OWASP LLM Top 10 (prompt-
-  injection, sensitive-info disclosure) informs the grounding + decline policy; ISO 25010 quality
-  attributes (reliability, security, cost-efficiency) inform the NFRs the Spec will quantify.
+- *Regulatory:* GDPR/CCPA data-minimization — the lead form collects only name+email+excerpt; not
+  over-collecting and having a lawful basis is the only obligation at this scale. No HIPAA/PCI.
+- *Architectural:* 12-factor config (secrets via env, never committed); OWASP LLM Top 10 (LLM01
+  prompt-injection, LLM06 sensitive-info disclosure) informs the grounding + "posture yes,
+  guarantees no" policy; ISO 25010 (reliability, security, cost-efficiency) informs the NFRs.
 - *Style / project convention:* `CLAUDE.md` (to be authored) is the agent-onboarding contract the
   assessment grades directly.
 
 **Prior-art evidence**
 
-- **Intercom / Drift / Ada** support bots — establish the pattern: grounded FAQ deflection + human
-  handoff/lead capture. We mirror the "answer-or-escalate" split, minus the CRM integration depth.
-- **Retrieval-Augmented Generation** (Lewis et al., 2020, arXiv:2005.11401) — the grounding
-  approach; we use a deliberately minimal variant (small corpus, local embeddings, brute-force
-  cosine) appropriate to the corpus size.
+- **Intercom Fin / Ada** — ground answers in a curated corpus and explicitly hand off outside it;
+  the "grounded-or-handoff" contract is our F1+F3.
+- **Drift** — treats lead capture/routing as the primary value; reinforces escalation-to-lead as a
+  first-class feature, not an afterthought.
+- **RAG** (Lewis et al., 2020, arXiv:2005.11401) — retrieve-then-generate reduces hallucination;
+  we use a deliberately minimal variant (small corpus, local embeddings, brute-force cosine).
+
+### 6.6 Key assumptions (gaps the brief left to us — decided, not deferred)
+
+The brief hands three facts to "Cadre," who we cannot ask before submission. We resolve them as
+defended assumptions rather than open questions; each is a KB/config change if reality differs.
+
+- **A-1 Booking.** *Verified:* cadre.ai has **no scheduling integration** — only a contact form,
+  `hello@gocadre.ai`, and a phone number. The bot surfaces the contact path **and** captures a lead
+  in the same turn so the visitor becomes reachable without leaving chat. *If Cadre has an internal
+  scheduler, wiring it is a KB/config change, not a code change.*
+- **A-2 Data-security posture.** Cadre publishes no certifications or retention terms. The bot may
+  state **posture** (model-agnostic across OpenAI/Anthropic/Google/Microsoft/AWS; model selected
+  per use case; server-side key handling; what *this* bot retains) and must **decline guarantees**
+  (certs, retention periods, contractual data terms). *"Posture yes, guarantees no."*
+- **A-3 Portal.** Cadre publicly describes a **"centralized portal to track tools, agents,
+  training, and results."** The bot answers *what it is* in full and routes only on *how to get in*
+  ("access is provisioned by your Cadre team as part of an engagement"). We do not build the portal
+  (§4).
+- **A-4 Persistence (data minimization).** We assume **no consent basis** to log anonymous
+  conversations from a public site, so we persist only **name/email/excerpt**. *Trade-off named:*
+  without transcripts we cannot measure **deflection rate** — the metric that proves the bot works
+  — until a consent notice is added (see §12, §15).
 
 ## 7. Research & industry context
 
 ### 7.1 How established products handle this
 
-- **Intercom Fin / Ada** — ground answers in a curated help-center corpus and *explicitly* refuse
-  outside it, handing off to a human. This "grounded-or-handoff" contract is exactly our F1+F3.
+- **Intercom Fin / Ada** — ground answers in a curated help-center corpus and explicitly refuse
+  outside it, handing off to a human. This "grounded-or-handoff" contract is exactly F1+F3.
 - **Drift** — leans on lead capture and routing as the primary value, with the bot as qualifier.
-  Reinforces that **escalation-to-lead is a first-class feature, not an afterthought**.
+  Reinforces that escalation-to-lead is a first-class feature.
 
 ### 7.2 Relevant prior art / papers / standards
 
 - RAG (arXiv:2005.11401) — retrieve-then-generate reduces hallucination vs. parametric-only recall.
 - OWASP Top 10 for LLM Applications — LLM01 Prompt Injection, LLM06 Sensitive Information
-  Disclosure: both are directly addressed by the grounding + decline-and-route policy.
+  Disclosure: both directly addressed by grounding + the posture/guarantees split (D-07).
 
 ### 7.3 Proofs of concept
 
@@ -152,48 +181,58 @@ C4Context
 
 ## 8. Proposed direction
 
-### 8.1 Approach
+### 8.1 Approach — a configurable shell of reusable blocks
 
-A single Next.js (App Router) app on Vercel. The browser renders a streaming chat UI. A server
-route handler receives the user turn, **embeds it locally** (MiniLM via transformers.js),
-retrieves the top-k chunks from a **curated Cadre corpus** by brute-force cosine similarity,
-composes a grounded prompt with a strict system prompt (answer only from context; decline+route on
-unknowns/pricing; stay on-topic), and streams a completion from a hosted model via **OpenRouter**.
-When the model (or a lightweight trigger) determines it cannot help or the user wants a human, the
-UI offers a **lead form**; submitting writes a lead row to **Supabase Postgres** behind a pluggable
-`notify(lead)` interface (logging by default; WhatsApp as a stretch implementation). A persistent
-"Talk to an AI Strategist" CTA points to cadre.ai/contact.
+A single Next.js (App Router) app on Vercel, structured as a **shell parameterized by a typed
+`ClientProfile`** and assembled from **named component seams**, each with a defined configuration
+surface and a maturity rating:
+
+| Component | Responsibility | Configuration surface | Maturity |
+|---|---|---|---|
+| `KnowledgeRetriever` | Embed query, cosine top-k over the corpus | corpus source, k, threshold | MVP |
+| `LlmProvider` | Chat completion (streamed) | model id, params, base URL (OpenRouter) | MVP |
+| `LeadStore` | Persist a Lead | table/schema (Supabase) | MVP |
+| `Notifier` | Announce a new lead | impl: log today, email next | PoC (log) |
+| `ChatOrchestrator` | System prompt + retrieval + guardrails + escalation triggers | persona, policy, triggers | MVP |
+| `ClientProfile` | The one config that re-skins the block for a new client | corpus, persona, brand, model, escalation target, CTA | MVP |
+
+The browser renders a streaming chat UI. A server route embeds the user turn **locally** (MiniLM
+via transformers.js), retrieves top-k chunks from the **curated corpus**, composes a grounded
+prompt (answer only from context; **posture yes, guarantees no**; stay on-topic), and streams a
+completion via **OpenRouter**. **Escalation triggers** — explicit human request, pricing/quote,
+**"how do I get scored" (AI Maturity Index)**, **"how do I access the portal,"** security
+*guarantees*, or low-retrieval-confidence — offer a **lead form**; submitting writes a Lead to
+**Supabase** behind the pluggable `Notifier`. A persistent "Talk to an AI Strategist" CTA points to
+cadre.ai/contact.
 
 ### 8.2 Information / data model sketch
 
-- **KbChunk** (conceptual) — `id`, `sourceUrl`, `title`, `text`, `embedding[]`. Built once at seed
-  time from the curated corpus.
-- **Lead** — `id`, `name`, `email`, `message`, `reason` (why escalated), `conversationExcerpt`,
-  `status` (new), `createdAt`. The unit of escalation and the inbound team's work item.
-- **Conversation/Message** (optional, minimal) — retained only insofar as needed to attach context
-  to a captured lead; full transcript persistence is an open question (OPEN-Q-06).
+- **KbChunk** — `id`, `sourceUrl`, `title`, `text`, `embedding[]`. Built once at seed time from the
+  curated corpus (services, industries, **AI Maturity Index: eight-pillar framework, grade per area
+  with explanations + actionable insights**, portal description, security posture, booking).
+- **Lead** — `id`, `name`, `email`, `excerpt` (the escalating turn), `reason`, `status` (new),
+  `createdAt`. The unit of escalation and the inbound team's work item. **Deliberately excludes**
+  full transcripts (A-4).
 
 ## 9. Alternatives considered
 
 ### 9.1 Alternative A — Curated in-context knowledge base (no retrieval)
 
-- **Description:** Bake the entire curated corpus into the system prompt; no embedding/retrieval.
+- **Description:** Bake the whole corpus into the system prompt; no embedding/retrieval.
 - **Pros:** Simplest; zero retrieval failure modes; fastest to build.
-- **Cons:** Doesn't scale past a small corpus; weaker architecture story; every token billed each
-  turn.
-- **Decision:** **Rejected** (candidate's call) — the reviewer weights System Design 25% and a real
-  (if minimal) RAG demonstrates the pattern; corpus is small enough that retrieval cost is trivial.
+- **Cons:** Doesn't scale; weaker architecture story; every token billed each turn.
+- **Decision:** **Rejected** — reviewer weights System Design 25%; a real (if minimal) RAG
+  demonstrates the pattern; corpus is small enough that retrieval cost is trivial.
 
 ### 9.2 Alternative B — Full RAG over a crawl of cadre.ai (vector DB)
 
 - **Description:** Crawl the site, chunk, embed via an API, store in pgvector, tune retrieval.
-- **Pros:** Most impressive; closest to a production system.
-- **Cons:** Crawl + chunk + embed + tune is the classic way to run out of a 4h budget; adds an
-  embedding-API dependency and a vector store to operate and debug.
-- **Decision:** **Deferred** — pgvector and a larger corpus return if time allows (see §14); the
-  MVP uses a small curated corpus with local embeddings.
+- **Pros:** Most impressive; closest to production.
+- **Cons:** Crawl+chunk+embed+tune is the classic way to burn a 4h budget; adds an embedding-API
+  dependency and a vector store to operate.
+- **Decision:** **Deferred** — pgvector + a larger corpus return if time allows (§14).
 
-### 9.3 Alternative C — Selected direction: simple RAG, curated corpus, local embeddings
+### 9.3 Alternative C — Selected: simple RAG, curated corpus, local embeddings
 
 - **Description:** Small curated corpus + local MiniLM embeddings + brute-force cosine top-k.
 - **Pros:** Real retrieval with **no external embedding dependency and no vector-DB ops**;
@@ -218,17 +257,20 @@ UI offers a **lead form**; submitting writes a lead row to **Supabase Postgres**
 | D-01 | Next.js (App Router) full-stack on **Vercel + Supabase** | One repo, one deploy (lowest deployment risk — graded); Postgres serves leads + optional pgvector; fluent stack | Hard (post-deploy) |
 | D-02 | **Simple RAG** over a small **curated** Cadre corpus | Real grounding without crawl/vector-DB overhead; fits budget | Easy |
 | D-03 | **Local embeddings** (MiniLM/transformers.js) + brute-force cosine top-k; **no vector DB** at MVP | Removes unverified OpenRouter-embeddings dependency from hot path; instant at ~150 chunks | Easy |
-| D-04 | Chat model = **Google Gemini 2.5 Flash via OpenRouter**, selected by env var | Cheap + fast + strong instruction-following protects $5 budget and demo latency; swappable | Easy |
-| D-05 | Escalation writes a **Lead** to Supabase behind a pluggable **`notify(lead)`** interface; WhatsApp is a stretch impl, **logging is the default** | Decouples capture from notification so a WhatsApp hiccup can't sink the submission | Easy |
-| D-06 | **No auth / no portal build**; bot explains portal access only | Out of budget; not the graded core | Easy |
-| D-07 | **Decline + route** on anything ungroundable — especially **pricing**, security specifics, portal login | A consultancy bot must not fabricate; safest boundary | Easy |
-| D-08 | **Grounding-only answering**: system prompt restricts answers to retrieved context + explicit fallback | Directly targets the 25% system-prompt-design dimension and hallucination risk | Easy |
+| D-04 | Chat model = **Google Gemini 2.5 Flash via OpenRouter**, selected by env var | Cheap + fast + strong instruction-following protects the $5 budget and demo latency; swappable | Easy |
+| D-05 | Escalation writes a **Lead** to Supabase behind a pluggable **`Notifier`**; impl **today = Postgres + log**, **next = email to the inbound team** | Decouples capture from notification; email fits a San Diego B2B team without an external channel dependency | Easy |
+| D-06 | **No auth / no portal build**; the bot *explains* the portal and how access is arranged | Out of budget; not the graded core (§4) | Easy |
+| D-07 | **Posture yes, guarantees no.** Bot **answers** LLM-selection & data-security *posture* (model-agnostic across major providers; selection per use case; server-side keys; what this bot retains) and **declines** *guarantees* (certs, retention periods, contractual terms) and **pricing** | The brief asks the bot to *handle* "LLM selection and data security" — so it must answer posture; safety applies only to unverifiable guarantees | Easy |
+| D-08 | **Grounding-only answering**: system prompt restricts answers to retrieved context + explicit fallback | Targets the 25% system-prompt dimension and hallucination risk | Easy |
+| D-09 | **Structured lead capture** (name/email/excerpt) over **redirect-only** | Brief allows "escalate *or redirect*"; a bare redirect drops the conversation context the strategist needs — the extra table+form buys a qualified, context-rich handoff | Easy |
+| D-10 | **Configurable shell**: a typed `ClientProfile` parameterizes corpus/persona/brand/model/escalation/CTA; named seams (`KnowledgeRetriever`, `LlmProvider`, `LeadStore`, `Notifier`, `ChatOrchestrator`) | The bot is one of Cadre's reusable "blocks"; build-once-configure-many is the role's core competency and the System Design story | Medium |
+| D-11 | **Data minimization**: persist only name/email/excerpt; **no anonymous transcript logging** | No consent basis on a public site; keeps PII surface minimal — accepts the deflection-rate measurement gap (§12) | Easy |
 
 ## 11. Risks
 
 | Risk | Severity | Likelihood | Mitigation idea |
 |---|---|---|---|
-| Bot hallucinates Cadre facts (pricing, security, portal) | High | Med | Grounding-only prompt (D-08) + decline-and-route policy (D-07); acceptance tests for each |
+| Bot fabricates a Cadre specific (pricing, cert, retention, portal login) | High | Med | Grounding-only prompt (D-08) + "posture yes, guarantees no" (D-07); acceptance tests per case |
 | $5 OpenRouter budget exhausted before/at review | Med | Med | Cheap model (D-04); cap max tokens/turn; light rate-limit; don't loop during testing |
 | Deployment fails under time pressure | Med | Med | Deploy a skeleton to Vercel **first** (D-01), iterate live |
 | Prompt injection / abuse of free-text field | Med | Med | System-prompt guardrails; bot has no privileged tools beyond lead insert; escape output in UI |
@@ -236,17 +278,20 @@ UI offers a **lead form**; submitting writes a lead row to **Supabase Postgres**
 
 ## 12. Success signals
 
-- The bot answers all six seed scenarios plausibly in a live demo **without inventing facts**.
-- Every "can't answer / wants human" path reliably **produces a Lead row**.
+- The bot answers all six seed scenarios plausibly in a live demo **without fabricating** —
+  including the AI Maturity Index and the security *posture*.
+- Every "can't answer / wants human / how-do-I-get-scored" path reliably **produces a Lead row**.
 - Total OpenRouter spend across build + testing + demo stays **well under $5**.
 - The deployed URL is reachable and responsive during the review.
+- *(Deferred by choice — D-11)* **Deflection rate** (share of sessions resolved without escalation)
+  is the metric that would prove ongoing value; we can't measure it until transcript logging with a
+  consent notice is added.
 
 ## 13. Dependencies & stakeholders
 
 ### 13.1 Dependencies
 
-- **Services / vendors:** OpenRouter (chat), Supabase (Postgres), Vercel (hosting); WhatsApp
-  provider (stretch only).
+- **Services / vendors:** OpenRouter (chat), Supabase (Postgres), Vercel (hosting).
 - **Upstream specs / RFCs:** none.
 - **Downstream consumers:** Cadre inbound team (consumes captured leads).
 
@@ -260,26 +305,24 @@ UI offers a **lead form**; submitting writes a lead row to **Supabase Postgres**
 
 - **pgvector + larger/crawled corpus** — *deferred until* the MVP is deployed and time remains, or
   the corpus outgrows brute-force cosine.
-- **WhatsApp new-lead notification** — *deferred until* core lead capture works and a target number
-  + provider credentials are available (OPEN-Q-04).
-- **Conversation transcript persistence & analytics** — *deferred until* there's a reason beyond
-  lead context (OPEN-Q-06).
+- **Email `Notifier` implementation** — *deferred until* core lead capture works; the seam exists
+  now, the second impl is a small addition.
+- **Deflection-rate measurement (transcript logging + consent notice)** — *deferred until* someone
+  asks for the number; then we add it deliberately, with consent (see D-11, §12).
 
 ## 15. Open questions
 
 | ID | Question | Owner | Target stage | Notes |
 |---|---|---|---|---|
-| OPEN-Q-01 | Is there a real scheduling link (Calendly, etc.) or is /contact the booking path? | Andrés / Cadre | Spec | Default: point to cadre.ai/contact + email hello@gocadre.ai |
-| OPEN-Q-02 | What data-security specifics may the bot state? | Cadre | Spec | Default: describe posture generally + route; never invent guarantees |
-| OPEN-Q-03 | Is there a portal URL / login flow the bot should reference? | Cadre | Spec | Default: "access is arranged via the Cadre team"; no invented URL |
-| OPEN-Q-04 | WhatsApp target number + provider (Twilio/Meta) for stretch notify | Andrés | Plan | Stretch only; logging fallback otherwise |
-| OPEN-Q-05 | Confirm exact model + verify OpenRouter availability/pricing | Andrés | Plan | D-04 pick is swappable via env var |
-| OPEN-Q-06 | Persist full conversation transcripts, or only lead context? | Andrés | Spec | Default: minimal — store only the excerpt attached to a lead |
+| OPEN-Q-01 | Confirm Gemini 2.5 Flash is live on OpenRouter at the expected price; else pick nearest cheap/fast model | Andrés | Plan | D-04 is swappable via env; build-time verification, self-owned |
+| OPEN-Q-02 | Add deflection-rate measurement (needs a consent notice)? | Andrés | Post-launch | Forward-looking, self-owned; not a blocker |
 
 ## 16. Handoff to the Spec
 
-- **Settled (do not relitigate):** D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08.
-- **Decide in Spec:** OPEN-Q-01, OPEN-Q-02, OPEN-Q-03, OPEN-Q-06 (OPEN-Q-04, OPEN-Q-05 → Plan).
+- **Settled (do not relitigate):** D-01 … D-11, and assumptions A-1 … A-4.
+- **Decide in Spec:** nothing Cadre-owned remains open; the Spec turns D-07/D-08/D-09 into
+  behavioural requirements and A-1…A-4 into acceptance criteria. (OPEN-Q-01 → Plan; OPEN-Q-02 →
+  Post-launch.)
 - **Must remain non-goals (verbatim):**
   - "We are not building authentication or a real client portal."
   - "We are not building a pricing engine or quoting anything."
@@ -290,15 +333,17 @@ UI offers a **lead form**; submitting writes a lead row to **Supabase Postgres**
 ## 17. Appendix
 
 - Assessment source: `Cadre_AI_Chatbot_Take_Home_Candidate_v1.1.pdf` (repo root).
-- Process decision log: `../decisions.md` (L-01 … L-07).
-- Cadre facts grounded from cadre.ai (home, /strategy, /contact) and web search — see decisions.md
+- Role source: Staff Product Architect JD (git-ignored — contains PII).
+- Process decision log: `../decisions.md` (L-01 … L-09).
+- Cadre facts grounded from cadre.ai (home, /strategy, /contact) + web search — see decisions.md
   L-07 for the consolidated fact list.
 
 ## 18. Change log
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-09-07 | Andrés Martiliano | Initial draft. Self-critique: skipped (first-run baseline — offered to reviewer on return). |
+| 2026-09-07 | Andrés Martiliano | Initial draft. Self-critique: skipped (first-run baseline). |
+| 2026-09-07 | Andrés Martiliano | Rev 2 from review: D-07 split (posture yes/guarantees no); added D-09 (lead vs redirect), D-10 (configurable shell), D-11 (data minimization); booking/security/portal → assumptions A-1…A-4; AI Maturity Index promoted to KB + escalation trigger; WhatsApp cut (kept `Notifier` seam, next impl = email); open questions reduced to 2 self-owned items. Self-critique: skipped (offered to reviewer). |
 
 ---
 
