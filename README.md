@@ -4,7 +4,7 @@ A customer-support chatbot for **Cadre AI** — built as a **configurable, reusa
 system" block**, not a one-off. It answers common inbound questions from a curated, retrieval-grounded
 knowledge base and **escalates to a captured lead** when it can't or shouldn't answer.
 
-> **Live URL:** _pending deploy — see [Deployment](#deployment)._
+> **Live URL:** **https://cadre-test.vercel.app**
 > **Stack:** Next.js 16 (App Router) · TypeScript · Tailwind · OpenRouter (Gemini 2.5 Flash) · Supabase.
 
 This build was run with a **spec-driven methodology**. The thinking is visible in
@@ -138,7 +138,7 @@ Honest status against [`docs/spec.md`](docs/spec.md). `✅ PASS` = implemented &
 | TC-044 prompt-injection mitigation | ◐ PARTIAL | system-prompt guardrail; not adversarially hardened |
 | S-01…S-07 scenarios | ✅ PASS | verified live (see `decisions.md` L-13) |
 | S-08 lead submission | ◐ PARTIAL | coded; not live-verified pending Supabase |
-| Live public deploy | ◐ PARTIAL | app builds; Vercel deploy pending (needs account auth) |
+| Live public deploy | ✅ PASS | https://cadre-test.vercel.app; live chat + guardrails verified |
 | Automated test suite | ✗ ABSENT | manual scenario verification only (budget trade-off) |
 | Deflection-rate metric | ✗ ABSENT | deferred by design (needs consent-based logging — D-11) |
 | WhatsApp notifier | ✗ ABSENT | cut; `Notifier` seam kept, email is the next impl (D-05) |

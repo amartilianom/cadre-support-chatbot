@@ -426,6 +426,9 @@ answers — verified with a real call. No model swap needed.
 ### Phase clock
 - MVP F1–F4 built + chat/guardrails verified locally: **22:13**
 - README + conformance audit done; deployed to Vercel (https://cadre-test.vercel.app).
+- **Live deploy verified:** production env vars set; live `/api/chat` returns grounded answers.
+  Lead endpoint returns the graceful fallback until `supabase/schema.sql` is run (table not yet
+  created) — that's the one remaining step for end-to-end leads.
 
 ---
 
