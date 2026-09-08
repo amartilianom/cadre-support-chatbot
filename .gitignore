@@ -3,6 +3,10 @@
 .env.*
 !.env.example
 
+# === Personal application materials (PII: phone, email, salary) — reference only, not a deliverable ===
+Staff Product Architect.html
+Staff Product Architect_files/
+
 # === Dependencies ===
 node_modules/
 .pnp
