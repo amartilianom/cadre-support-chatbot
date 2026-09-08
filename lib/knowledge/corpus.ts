@@ -12,7 +12,7 @@ export type KbChunk = {
   sourceUrl: string;
 };
 
-export const corpus: KbChunk[] = [
+export const cadreCorpus: KbChunk[] = [
   {
     id: "about",
     title: "What Cadre AI does",

@@ -4,7 +4,8 @@
  * interface is intentionally minimal so a semantic (embeddings / pgvector) retriever can be swapped
  * in later with the same signature.
  */
-import { corpus, type KbChunk } from "./corpus";
+import { activeProfile } from "@/lib/config/client-profile";
+import type { KbChunk } from "./corpus";
 
 export type RetrievedChunk = { chunk: KbChunk; score: number };
 
@@ -30,8 +31,8 @@ function tokenize(input: string): string[] {
 
 type Indexed = { chunk: KbChunk; tf: Map<string, number>; len: number };
 
-// Build the index once at module load (corpus is small and static).
-const indexed: Indexed[] = corpus.map((chunk) => {
+// Build the index once at module load from the active profile's corpus (small and static).
+const indexed: Indexed[] = activeProfile.corpus.map((chunk) => {
   // Title terms are weighted by indexing the title twice.
   const tokens = [...tokenize(chunk.title), ...tokenize(chunk.title), ...tokenize(chunk.text)];
   const tf = new Map<string, number>();

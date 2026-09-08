@@ -4,25 +4,28 @@ import { useEffect, useRef, useState } from "react";
 import LeadForm from "./LeadForm";
 
 type Msg = { role: "user" | "assistant"; content: string };
-type Brand = { productName: string; tagline: string; accentColor: string };
+type Brand = { productName: string; tagline: string; accentColor: string; ctaLabel: string };
 type Escalation = { bookingUrl: string; contactEmail: string; contactPhone: string };
 
-const GREETING =
-  "Hi! I'm the Cadre AI assistant. Ask me what Cadre does, which industries we work with, about the AI Maturity Index, or how to book a call with a strategist.";
-
-const SUGGESTIONS = [
-  "What does Cadre AI do?",
-  "What's the AI Maturity Index?",
-  "Do you work with private equity?",
-  "How do I book a call?",
-];
-
-export default function Chat({ brand, escalation }: { brand: Brand; escalation: Escalation }) {
-  const [messages, setMessages] = useState<Msg[]>([{ role: "assistant", content: GREETING }]);
+export default function Chat({
+  brand,
+  greeting,
+  suggestions,
+  escalation,
+}: {
+  brand: Brand;
+  greeting: string;
+  suggestions: string[];
+  escalation: Escalation;
+}) {
+  const [messages, setMessages] = useState<Msg[]>([{ role: "assistant", content: greeting }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [showLead, setShowLead] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Stable per-session id for outcome logging (deflection). No PII; not persisted server-side.
+  const sessionId = useRef<string>("");
+  if (!sessionId.current) sessionId.current = crypto.randomUUID();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -39,7 +42,7 @@ export default function Chat({ brand, escalation }: { brand: Brand; escalation: 
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, sessionId: sessionId.current }),
       });
       if (!res.ok || !res.body) {
         const detail = await res.text().catch(() => "");
@@ -73,7 +76,7 @@ export default function Chat({ brand, escalation }: { brand: Brand; escalation: 
         const copy = [...m];
         copy[copy.length - 1] = {
           role: "assistant",
-          content: `Sorry — I hit a problem. Please try again, or reach Cadre at ${escalation.contactEmail}.`,
+          content: `Sorry — I hit a problem. Please try again, or reach the team at ${escalation.contactEmail}.`,
         };
         return copy;
       });
@@ -98,12 +101,17 @@ export default function Chat({ brand, escalation }: { brand: Brand; escalation: 
           className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-white transition hover:opacity-90"
           style={{ backgroundColor: brand.accentColor }}
         >
-          Talk to an AI Strategist
+          {brand.ctaLabel}
         </button>
       </header>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+      <div
+        ref={scrollRef}
+        className="flex-1 space-y-4 overflow-y-auto px-5 py-5"
+        role="log"
+        aria-live="polite"
+      >
         {messages.map((m, i) => (
           <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
             <div
@@ -122,7 +130,7 @@ export default function Chat({ brand, escalation }: { brand: Brand; escalation: 
       {/* Suggestions (only before the first user message) */}
       {messages.length === 1 && (
         <div className="flex flex-wrap gap-2 px-5 pb-2">
-          {SUGGESTIONS.map((s) => (
+          {suggestions.map((s) => (
             <button
               key={s}
               onClick={() => send(s)}
@@ -145,7 +153,7 @@ export default function Chat({ brand, escalation }: { brand: Brand; escalation: 
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about Cadre AI…"
+          placeholder="Type your question…"
           className="flex-1 rounded-xl border border-neutral-200 px-4 py-2.5 text-sm outline-none focus:border-neutral-400"
           disabled={loading}
         />
@@ -163,6 +171,8 @@ export default function Chat({ brand, escalation }: { brand: Brand; escalation: 
         <LeadForm
           escalation={escalation}
           accentColor={brand.accentColor}
+          ctaLabel={brand.ctaLabel}
+          sessionId={sessionId.current}
           onClose={() => setShowLead(false)}
         />
       )}

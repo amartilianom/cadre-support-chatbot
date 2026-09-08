@@ -7,10 +7,14 @@ type Escalation = { bookingUrl: string; contactEmail: string; contactPhone: stri
 export default function LeadForm({
   escalation,
   accentColor,
+  ctaLabel,
+  sessionId,
   onClose,
 }: {
   escalation: Escalation;
   accentColor: string;
+  ctaLabel: string;
+  sessionId: string;
   onClose: () => void;
 }) {
   const [name, setName] = useState("");
@@ -27,7 +31,7 @@ export default function LeadForm({
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, email, message, reason: "Requested an AI strategist" }),
+        body: JSON.stringify({ name, email, message, reason: "Requested the team", sessionId }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
@@ -42,7 +46,7 @@ export default function LeadForm({
     <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-start justify-between">
-          <h2 className="text-lg font-semibold text-neutral-900">Talk to an AI Strategist</h2>
+          <h2 className="text-lg font-semibold text-neutral-900">{ctaLabel}</h2>
           <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600" aria-label="Close">
             ✕
           </button>
