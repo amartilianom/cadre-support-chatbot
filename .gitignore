@@ -3,9 +3,11 @@
 .env.*
 !.env.example
 
-# === Personal application materials (PII: phone, email, salary) — reference only, not a deliverable ===
+# === Source originals — kept on disk for reference, but out of git (clean MD lives in /reference) ===
+# JD saved page contains PII (phone, personal email, salary form); PDF is a binary source doc.
 Staff Product Architect.html
 Staff Product Architect_files/
+Cadre_AI_Chatbot_Take_Home_Candidate_v1.1.pdf
 
 # === Dependencies ===
 node_modules/

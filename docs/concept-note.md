@@ -332,9 +332,10 @@ cadre.ai/contact.
 
 ## 17. Appendix
 
-- Assessment source: `Cadre_AI_Chatbot_Take_Home_Candidate_v1.1.pdf` (repo root).
-- Role source: Staff Product Architect JD (git-ignored — contains PII).
-- Process decision log: `../decisions.md` (L-01 … L-09).
+- Assessment (converted to MD): `../reference/take-home-assessment.md`.
+- Role framing (converted to MD, PII-free): `../reference/staff-product-architect-jd.md`.
+- Methodology driver: `../reference/take-home-prompt.md`.
+- Process decision log: `../decisions.md` (L-01 … L-10).
 - Cadre facts grounded from cadre.ai (home, /strategy, /contact) + web search — see decisions.md
   L-07 for the consolidated fact list.
 

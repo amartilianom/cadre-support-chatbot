@@ -321,3 +321,23 @@ named seams `KnowledgeRetriever` · `LlmProvider` · `LeadStore` · `Notifier` �
 **Housekeeping:** JD HTML (`Staff Product Architect.html` + `_files/`) git-ignored — contains PII
 (phone, personal email, salary form), not a deliverable.
 **Reversible:** all pre-implementation; cheap.
+
+---
+
+## L-10 · 21:40 · Repo hygiene: reference material → clean Markdown in `/reference`
+**Decided by:** you ("convert the pdfs and html into md ... keep clean the repository").
+**Did:**
+- Converted the assessment PDF → `reference/take-home-assessment.md` (faithful, diffable).
+- Converted the JD HTML → `reference/staff-product-architect-jd.md` — **PII stripped** (only the
+  public posting; the application form's name/email/phone/salary excluded).
+- Moved `take-home-prompt.md` → `reference/` so all non-deliverable reference material lives in one
+  place and the root holds only project artifacts.
+- **Untracked the binary PDF** (`git rm --cached`) and git-ignored it + the JD HTML. Originals stay
+  on disk for reference but never enter git or the submission zip.
+- Updated Concept Note §17 source links to the converted files.
+**Why:** binary PDF + a saved-HTML-page-with-assets-folder are exactly the clutter a clean repo /
+lightweight zip should avoid; Markdown is diffable, greppable, and reviewable.
+**Note for you:** the on-disk originals (`*.pdf`, `Staff Product Architect.html`, `_files/`) are
+safe to delete manually now that the MD holds the content — I left them rather than delete files I
+didn't create. Say the word and I'll remove them.
+**Reversible:** trivially (originals retained on disk).
