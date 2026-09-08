@@ -38,6 +38,12 @@ export const cadreCorpus: KbChunk[] = [
     sourceUrl: "https://cadre.ai/contact",
   },
   {
+    id: "maturity-pillars",
+    title: "AI Maturity Index — the eight pillars",
+    text: "Cadre's AI Maturity Index rates your organization across an eight-pillar framework for AI transformation. The eight pillars are: (1) Build your dedicated AI team — a fully accountable leader supported by experts across product, strategy, research, and engineering; (2) Deploy your AI Command Center — standardize on one AI platform company-wide to avoid shadow-AI chaos from employees using personal accounts with company data; (3) Create an AI-First Culture Shift — clear policies, CEO communication that addresses employee fears, and real change management; (4) Connect & Enable your Tech Stack — give existing systems API access so agents can move data across fragmented platforms; (5) AI-Healthy Data Assessment — map where data is created, transformed, and stored, and how clean it is (garbage in, garbage out); (6) Build your Framework for AI Agent Readiness — treat AI agents as virtual workers or digital employees with ongoing monitoring and training; (7) Departmental AI Deep Dives — go department by department to identify the highest-value AI opportunities; (8) Find your 3-Year AI Vision — define the company's longer-term dream state as the most scalable, efficient version of itself. Request your AI Maturity Index to see how you rate across these pillars, and a strategist will walk you through the results.",
+    sourceUrl: "https://cadre.ai/strategy",
+  },
+  {
     id: "portal",
     title: "Cadre client portal",
     text: "Cadre provides a centralized client portal where you can track your AI tools, agents, training, and results, with accountability metrics in one place. Portal access is provisioned by your Cadre team as part of an engagement — there is no public self-service signup. If you are a client and need access, ask and we'll connect you with your Cadre contact.",

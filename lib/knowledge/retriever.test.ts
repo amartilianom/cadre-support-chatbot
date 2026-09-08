@@ -19,6 +19,13 @@ describe("lexicalRetriever.retrieve", () => {
     }
   });
 
+  it("surfaces the eight-pillars chunk within topK for a pillar query (grounds a deep answer)", () => {
+    const ids = lexicalRetriever
+      .retrieve("What are the eight pillars of the AI Maturity Index?")
+      .map((r) => r.chunk.id);
+    expect(ids).toContain("maturity-pillars");
+  });
+
   it("returns nothing for off-topic queries (grounding — the bot must not fabricate)", () => {
     for (const offTopic of [
       "What's the weather forecast in Paris tomorrow?",

@@ -494,3 +494,24 @@ costs"), while *pricing* says "prices/pricing." Kept a realistic query (`"what i
 and this stands as exactly the limitation semantic retrieval would fix (D-03 swap surface).
 **Verification:** `npm test` → 8/8 pass; `npx tsc --noEmit` clean.
 **Docs:** README audit row flipped ✗ ABSENT → ✅ PASS; `test` / `test:watch` scripts added.
+
+---
+
+## L-17 · 2026-09-08 · Corpus deepened: the eight AI-Maturity-Index pillars (grounded)
+**Decided by:** you noticed the bot could explain *that* the Maturity Index has an eight-pillar
+framework but couldn't name the pillars — shallow on the flagship topic (FR-011).
+**Checked first (golden rule):** the pillars are **published on `cadre.ai/strategy`**, so naming them
+is grounded, not fabricated. Verified verbatim via web fetch before writing them into the corpus.
+**What:** added a dedicated `maturity-pillars` chunk (kept single-topic so pillar queries retrieve
+tightly) listing all eight — Build your dedicated AI team, Deploy your AI Command Center, Create an
+AI-First Culture Shift, Connect & Enable your Tech Stack, AI-Healthy Data Assessment, Build your
+Framework for AI Agent Readiness, Departmental AI Deep Dives, Find your 3-Year AI Vision — sourced to
+`https://cadre.ai/strategy`. The overview `maturity-index` chunk is unchanged.
+**Spec:** no contradiction — this *deepens* FR-011 ("answer what the AI Maturity Index is, eight-pillar
+framework…"). Declining pillar questions *before* this was FR-003/FR-005 working (grounding-only); the
+fix was to add the public fact, not to loosen the guardrail. Not a "site crawl" (non-goal) — a manual,
+curated public fact (L-07).
+**Retrieval note:** BM25 length-normalization keeps the shorter overview chunk ranked #1 even for a
+"what are the eight pillars?" query, but the longer pillars chunk lands within `topK` (=4), so both
+reach the LLM context and the answer is grounded. Test asserts *retrieval-within-topK*, not rank-1.
+**Verification:** `npm test` → 9/9 pass (added a pillars-retrieval test); redeployed to prod; zip rebuilt.
