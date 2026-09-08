@@ -121,7 +121,7 @@ Not vibe-coded. A **staged methodology** with a visible paper trail:
 
 **Concept Note** (*why*) → **Spec** (*what shall it do* — EARS requirements, Given/When/Then scenarios) → **Plan** (*build order*) → **conformance audit**.
 
-- Every decision is logged and dated in **`decisions.md`** (L-01…L-16).
+- Every decision is logged and dated in **`decisions.md`** (L-01…L-17).
 - Requirements carry stable IDs (FR-/NFR-/TC-/AC-/S-) so tests and docs trace back.
 - The reviewer can read `.git` history and see the reasoning, not just the result.
 
@@ -131,7 +131,7 @@ Not vibe-coded. A **staged methodology** with a visible paper trail:
 
 | You ask… | The bot… |
 |---|---|
-| "What's the AI Maturity Index?" | Explains the eight-pillar framework, offers to get you scored |
+| "What's the AI Maturity Index? What are the pillars?" | Names all eight pillars (grounded to cadre.ai/strategy), offers to get you scored |
 | "How much does it cost?" | **Declines pricing**, offers a strategist |
 | "Are you SOC 2 certified?" | States posture, **declines the guarantee**, routes to a human |
 | "What's the weather?" | **Declines** — off-topic, nothing fabricated |
@@ -150,7 +150,7 @@ Not vibe-coded. A **staged methodology** with a visible paper trail:
 
 ## Quality & cost discipline
 
-- ✅ **Automated tests** — Vitest, 8 unit tests over the retrieval seam (incl. *off-topic returns nothing* — the grounding guarantee) + email validation. `npm test`, no network.
+- ✅ **Automated tests** — Vitest, 9 unit tests over the retrieval seam (incl. *off-topic returns nothing* — the grounding guarantee) + email validation. `npm test`, no network.
 - ✅ **Conformance audit** in the README — every spec obligation → verdict → evidence, **including honest gaps** (I mark what's `PARTIAL`/`ABSENT`, not just the wins).
 - ✅ **Cost cap (hard): < $5.** Cheap model, output ≤ 800 tokens/turn, context ≤ ~2k, rate-limited endpoint.
 - ✅ **Degrades gracefully** — an LLM/DB failure shows a friendly message and surfaces the direct-contact path; the page never crashes.
