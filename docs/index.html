@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadre AI Support Chatbot — Andrés Martiliano</title>
+    <meta
+      name="description"
+      content="A configurable, retrieval-grounded support chatbot for Cadre AI — built as a reusable block. Staff Product Architect take-home."
+    />
+
+    <!-- reveal.js core + a clean base theme (pinned to v5) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css"
+      id="theme"
+    />
+
+    <style>
+      :root {
+        --accent: #db4545; /* Cadre red */
+        --ink: #1b1b1f;
+        --muted: #6b7280;
+      }
+
+      .reveal {
+        font-family:
+          "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+          sans-serif;
+        font-size: 30px;
+        color: var(--ink);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        color: var(--ink);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        text-transform: none;
+        line-height: 1.15;
+      }
+      .reveal h1 {
+        font-size: 2.1em;
+      }
+      .reveal h2 {
+        font-size: 1.5em;
+        margin-bottom: 0.5em;
+      }
+      .reveal h3 {
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      /* Accent rule under section headers */
+      .reveal .slides section > h2:first-child::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 4px;
+        background: var(--accent);
+        border-radius: 2px;
+        margin-top: 0.35em;
+      }
+
+      .reveal a {
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(219, 69, 69, 0.35);
+      }
+      .reveal a:hover {
+        border-bottom-color: var(--accent);
+      }
+
+      .reveal strong {
+        color: var(--ink);
+      }
+      .reveal em {
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      .reveal blockquote {
+        border-left: 4px solid var(--accent);
+        background: #faf6f6;
+        padding: 0.5em 1em;
+        font-style: normal;
+        box-shadow: none;
+        width: 100%;
+      }
+
+      /* Tables — clean, roomy, subtle */
+      .reveal table {
+        font-size: 0.72em;
+        border-collapse: collapse;
+        margin: 0.4em 0;
+      }
+      .reveal table th {
+        color: var(--accent);
+        border-bottom: 2px solid var(--accent);
+        text-align: left;
+        padding: 0.35em 0.7em;
+      }
+      .reveal table td {
+        border-bottom: 1px solid #ececec;
+        padding: 0.35em 0.7em;
+        vertical-align: top;
+      }
+
+      .reveal pre {
+        box-shadow: none;
+        width: 100%;
+        font-size: 0.6em;
+      }
+      .reveal pre code {
+        border-radius: 8px;
+        border: 1px solid #ececec;
+        padding: 0.9em 1.1em;
+        background: #fbfbfb;
+      }
+
+      .reveal :not(pre) > code {
+        background: #f3f3f4;
+        border-radius: 4px;
+        padding: 0.1em 0.35em;
+        font-size: 0.9em;
+        color: #b23636;
+      }
+
+      .reveal small {
+        color: var(--muted);
+        font-size: 0.62em;
+      }
+
+      .reveal ul,
+      .reveal ol {
+        width: 100%;
+      }
+      .reveal li {
+        margin: 0.25em 0;
+      }
+
+      /* Centered title / closing slides */
+      .reveal section.title {
+        text-align: center;
+      }
+      .reveal section.title h2:first-child::after {
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .reveal section.title blockquote {
+        text-align: left;
+      }
+
+      .reveal .progress {
+        color: var(--accent);
+      }
+
+      .reveal .slide-number {
+        background: transparent;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- Slides authored in Markdown — see slides.md -->
+        <section
+          data-markdown="slides.md"
+          data-separator="\r?\n---\r?\n"
+          data-separator-notes="^Note:"
+        ></section>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/markdown/markdown.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css"
+    />
+    <script>
+      Reveal.initialize({
+        hash: true,
+        slideNumber: "c/t",
+        transition: "fade",
+        transitionSpeed: "fast",
+        width: 1180,
+        height: 740,
+        margin: 0.07,
+        controls: true,
+        progress: true,
+        plugins: [RevealMarkdown, RevealHighlight],
+      });
+    </script>
+  </body>
+</html>
