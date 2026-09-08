@@ -3,8 +3,8 @@
 .env.*
 !.env.example
 
-# === Source originals — kept on disk for reference, but out of git (clean MD lives in /reference) ===
-# JD saved page contains PII (phone, personal email, salary form); PDF is a binary source doc.
+# === Source originals (deleted after conversion to /reference MD) — ignored as a safety net so a ===
+# re-saved copy never gets committed. The JD HTML in particular carries PII (phone, email, salary).
 Staff Product Architect.html
 Staff Product Architect_files/
 Cadre_AI_Chatbot_Take_Home_Candidate_v1.1.pdf

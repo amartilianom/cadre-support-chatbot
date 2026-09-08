@@ -337,7 +337,7 @@ named seams `KnowledgeRetriever` · `LlmProvider` · `LeadStore` · `Notifier` �
 - Updated Concept Note §17 source links to the converted files.
 **Why:** binary PDF + a saved-HTML-page-with-assets-folder are exactly the clutter a clean repo /
 lightweight zip should avoid; Markdown is diffable, greppable, and reviewable.
-**Note for you:** the on-disk originals (`*.pdf`, `Staff Product Architect.html`, `_files/`) are
-safe to delete manually now that the MD holds the content — I left them rather than delete files I
-didn't create. Say the word and I'll remove them.
-**Reversible:** trivially (originals retained on disk).
+**Originals deleted (21:41):** on your go-ahead, removed the PDF, `Staff Product Architect.html`,
+and `Staff Product Architect_files/` from disk — content is preserved in `reference/*.md`. Root now
+holds only project + reference material. `.gitignore` entries kept as a PII safety net.
+**Reversible:** content retained in `/reference`; the binary/HTML originals are gone.
