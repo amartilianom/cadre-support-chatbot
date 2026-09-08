@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { runChat } from "@/lib/chat/orchestrator";
 import type { ChatMessage } from "@/lib/llm/openrouter";
 import { rateLimit } from "@/lib/rate-limit";
+import { logOutcome } from "@/lib/log";
 
 // Node runtime: the orchestrator uses Node APIs and we want a plain streaming Response.
 export const runtime = "nodejs";
@@ -20,15 +21,15 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  let rawMessages: unknown;
+  let body: { messages?: unknown; sessionId?: unknown };
   try {
-    const body = await req.json();
-    rawMessages = (body as { messages?: unknown })?.messages;
+    body = (await req.json()) as { messages?: unknown; sessionId?: unknown };
   } catch {
     return new Response("Invalid JSON body.", { status: 400 });
   }
+  const sessionId = typeof body.sessionId === "string" ? body.sessionId : "unknown";
 
-  const messages: ChatMessage[] = (Array.isArray(rawMessages) ? rawMessages : [])
+  const messages: ChatMessage[] = (Array.isArray(body.messages) ? body.messages : [])
     .filter(
       (m): m is ChatMessage =>
         !!m &&
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const stream = await runChat(messages, req.signal);
+    logOutcome("answered", { sessionId });
     return new Response(stream, {
       headers: {
         "content-type": "text/plain; charset=utf-8",
@@ -51,8 +53,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("[/api/chat] error:", err);
+    logOutcome("error", { sessionId, detail: String(err).slice(0, 120) });
     return new Response(
-      "Sorry — I'm having trouble reaching the assistant right now. Please try again in a moment, or contact Cadre at hello@gocadre.ai.",
+      "Sorry — I'm having trouble reaching the assistant right now. Please try again in a moment, or contact us.",
       { status: 500 },
     );
   }

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { supabaseLeadStore } from "@/lib/leads/store";
 import { activeNotifier } from "@/lib/leads/notifier";
 import { rateLimit } from "@/lib/rate-limit";
+import { logOutcome } from "@/lib/log";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
   const email = String(body.email ?? "").trim().slice(0, 320);
   const message = String(body.message ?? "").trim().slice(0, 2000);
   const reason = String(body.reason ?? "General inquiry").trim().slice(0, 200);
+  const sessionId = typeof body.sessionId === "string" ? body.sessionId : "unknown";
 
   if (!name) return json({ error: "Please enter your name." }, 400);
   if (!EMAIL_RE.test(email)) return json({ error: "Please enter a valid email address." }, 400); // FR-024
@@ -44,6 +46,7 @@ export async function POST(req: NextRequest) {
     activeNotifier
       .notify({ id, name, email, excerpt: message || reason, reason })
       .catch((e) => console.error("[/api/lead] notify failed:", e));
+    logOutcome("escalated", { sessionId });
     return json({ ok: true, id }, 200);
   } catch (err) {
     console.error("[/api/lead] error:", err);
