@@ -32,7 +32,7 @@ so it re-skins for another client by swapping one `ClientProfile`.
 ```
 ClientProfile (one config: corpus, persona, brand, model, escalation target, CTA)   ← D-10
       │
-ChatOrchestrator ── KnowledgeRetriever (local MiniLM embed → cosine top-k)          ← D-02/03
+ChatOrchestrator ── KnowledgeRetriever (lexical BM25 over corpus)                  ← D-02/03 (L-12)
       │         └── LlmProvider (OpenRouter, streamed, model from config)            ← D-04
       │
 Escalation ── LeadStore (Supabase insert) ── Notifier (log today / email next)       ← D-05/09/11
@@ -43,12 +43,12 @@ Escalation ── LeadStore (Supabase insert) ── Notifier (log today / email
 app/                      layout, page (chat), api/chat/route.ts, api/lead/route.ts
 components/               Chat.tsx, LeadForm.tsx
 lib/config/               client-profile.ts        # the config surface (D-10)
-lib/knowledge/            corpus.ts, embeddings.ts, retriever.ts
+lib/knowledge/            corpus.ts, corpus.northwind.ts, retriever.ts   # lexical (L-12); 2 corpora
 lib/llm/                  openrouter.ts            # LlmProvider
 lib/chat/                 orchestrator.ts, system-prompt.ts
 lib/leads/                store.ts, notifier.ts
 lib/supabase.ts           server-side client
-scripts/build-embeddings.ts + data/corpus-embeddings.json   # precomputed at build
+lib/log.ts, lib/rate-limit.ts                      # outcome logging + rate limit
 supabase/schema.sql       leads table DDL
 ```
 
@@ -63,11 +63,9 @@ supabase/schema.sql       leads table DDL
 ### Phase 1 — Knowledge base + retriever  (FR-002, FR-003; TC-003)
 - Hand-write `lib/knowledge/corpus.ts` from grounded facts (decisions.md L-07): services, industries,
   **AI Maturity Index (eight-pillar)**, portal, security posture, booking. Public facts only.
-- `scripts/build-embeddings.ts`: chunk + embed corpus with MiniLM (transformers.js) → `data/corpus-embeddings.json` (committed).
-- `retriever.ts`: embed query locally, brute-force cosine top-k.
-- **Risk + fallback:** if transformers.js is unreliable on Vercel serverless (cold start/bundle),
-  fall back to lexical (keyword/BM25-lite) retrieval and log the decision change. Corpus is tiny, so
-  either works.
+- `retriever.ts`: **lexical BM25** scoring over the corpus. *(Chosen at build — L-12: instant, zero
+  cold-start on serverless, deploys anywhere; corpus is tiny; the interface keeps embeddings/pgvector
+  a drop-in. Replaces the originally-planned MiniLM embeddings.)*
 - **DoD:** `retriever.retrieve("what industries…")` returns relevant chunks locally.
 
 ### Phase 2 — Chat API + streaming UI + guardrail (F1, F2; FR-001/004/005, FR-010–016; TC-002/040/044)

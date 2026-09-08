@@ -91,7 +91,8 @@ C4Context
   payment data, no credentials, no regulated PHI. The OpenRouter API key is a sensitive secret
   (server-side only).
 - **Deployment surface** — Public serverless endpoints on Vercel (Next.js route handlers);
-  Postgres reached server-side via Supabase with the service role key never exposed to the client.
+  Postgres reached server-side via Supabase; keys are never exposed to the client, and the
+  publishable key is additionally INSERT-only via RLS.
 
 > These lines select the CWE Top 25 categories the Spec §4.5 must address — primarily injection
 > (XSS in chat rendering, SQL injection via the data layer), secrets exposure, and
@@ -233,7 +234,7 @@ A persistent, profile-driven CTA (e.g. "Talk to an AI Strategist") opens the lea
 
 ### 9.3 Alternative C — Selected: simple RAG, curated corpus, local embeddings
 
-- **Description:** Small curated corpus + local MiniLM embeddings + brute-force cosine top-k.
+- **Description:** Small curated corpus + top-k retrieval (built as lexical BM25 — amended from local embeddings, L-12).
 - **Pros:** Real retrieval with **no external embedding dependency and no vector-DB ops**;
   deterministic; instant at this scale; clean "here's when I'd switch to pgvector" story.
 - **Cons:** Not production-scale; brute-force is O(n) per query (fine for ~150 chunks).
