@@ -64,6 +64,7 @@ grounded answers. Swapping models is a config change (FR-031).
 npm install
 cp .env.example .env.local     # then fill values (OPENROUTER_API_KEY is provided in the brief)
 npm run dev                     # http://localhost:3000
+npm test                        # 8 unit tests (retriever seam + email validation) — no network/LLM
 ```
 
 The chat works with just `OPENROUTER_API_KEY`. Lead capture also needs Supabase (below).
@@ -88,7 +89,7 @@ analytics, no transcript logging (data minimization). Full rationale in the Conc
 - Semantic retrieval (embeddings/pgvector) once the corpus grows or paraphrase misses appear.
 - An email `Notifier` for the inbound team (the seam is in place; logging is the current impl).
 - Transcript-based *why* analysis behind a consent notice (deflection *rate* already ships via outcome logs).
-- Automated tests + a formal latency measurement.
+- A formal latency / load measurement (unit tests over the retriever + validation already ship — `npm test`).
 - A third+ client profile / per-tenant routing (the shell already supports it via `CLIENT_PROFILE`).
 
 ## Assumptions (gaps the brief left to us — decided, not deferred)
@@ -147,7 +148,7 @@ Honest status against [`docs/spec.md`](docs/spec.md). `✅ PASS` = implemented &
 | S-08 lead submission | ✅ PASS | verified live (ok:true + id; row in Supabase) |
 | S-04a / S-06a pushback (hold the line) | ✅ PASS | insisted portal-URL / ballpark-price both declined live (L-15) |
 | Live public deploy | ✅ PASS | https://cadre-test.vercel.app; live chat + guardrails verified |
-| Automated test suite | ✗ ABSENT | manual scenario verification only (budget trade-off) |
+| Automated test suite | ✅ PASS | Vitest — 8 unit tests over the retriever seam + email validation (`npm test`); manual scenario walk on top |
 | Deflection-rate metric | ✅ PASS | measurable from session outcome logs — no transcripts/consent needed (NFR-006) |
 | WhatsApp notifier | ✗ ABSENT | cut; `Notifier` seam kept, email is the next impl (D-05) |
 

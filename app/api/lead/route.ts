@@ -3,10 +3,9 @@ import { supabaseLeadStore } from "@/lib/leads/store";
 import { activeNotifier } from "@/lib/leads/notifier";
 import { rateLimit } from "@/lib/rate-limit";
 import { logOutcome } from "@/lib/log";
+import { isValidEmail } from "@/lib/leads/validate";
 
 export const runtime = "nodejs";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {
@@ -33,7 +32,7 @@ export async function POST(req: NextRequest) {
   const sessionId = typeof body.sessionId === "string" ? body.sessionId : "unknown";
 
   if (!name) return json({ error: "Please enter your name." }, 400);
-  if (!EMAIL_RE.test(email)) return json({ error: "Please enter a valid email address." }, 400); // FR-024
+  if (!isValidEmail(email)) return json({ error: "Please enter a valid email address." }, 400); // FR-024
 
   try {
     const { id } = await supabaseLeadStore.save({

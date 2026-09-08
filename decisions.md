@@ -473,3 +473,24 @@ shipping a service-role/secret key, and it uses the key you already provided.
 **Known limit:** a public-form insert policy means direct inserts are possible if the key were
 exposed; app-layer rate limiting mitigates, and the key stays server-side. Acceptable for MVP.
 **Reversible:** trivially — swap to a `sb_secret_...` key + drop the policy if preferred.
+
+---
+
+## L-16 · 2026-09-08 · Automated tests added (closes the last audit gap)
+**Decided by:** you — "go ahead with the absent test." The audit had carried
+**Automated test suite: ✗ ABSENT** as an honest budget trade-off; you called it in.
+**What:** added **Vitest** with 8 unit tests over the two pieces of pure logic worth pinning:
+- `lib/knowledge/retriever.test.ts` — the **BM25 retrieval seam**: on-topic queries rank the right
+  chunk first; **off-topic queries return nothing** (the grounding guarantee, tested); `topK` + score
+  ordering; `buildContext` formatting + empty sentinel.
+- `lib/leads/validate.test.ts` — **email validation** (FR-024), valid/invalid/whitespace cases.
+**Refactor:** extracted `EMAIL_RE`/`isValidEmail` from `app/api/lead/route.ts` into
+`lib/leads/validate.ts` so the validator is testable without booting the route (the route now imports it).
+**Version pin:** Vitest **^2.1.9**, not latest (v5) — latest requires `@types/node ≥22` but the Next 16
+scaffold pins `@types/node@^20`; v2 keeps the dependency tree clean so the Vercel build is unaffected.
+**Honest note found by a test:** the query *"how much does an engagement cost?"* ranked the *about*
+chunk over *pricing* — lexical BM25 has no synonyms, and only *about* contains "cost" ("compress
+costs"), while *pricing* says "prices/pricing." Kept a realistic query (`"what is your pricing?"`)
+and this stands as exactly the limitation semantic retrieval would fix (D-03 swap surface).
+**Verification:** `npm test` → 8/8 pass; `npx tsc --noEmit` clean.
+**Docs:** README audit row flipped ✗ ABSENT → ✅ PASS; `test` / `test:watch` scripts added.
