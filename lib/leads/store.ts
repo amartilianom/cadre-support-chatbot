@@ -20,18 +20,18 @@ export const supabaseLeadStore: LeadStore = {
   async save(lead) {
     const supabase = getSupabase();
     if (!supabase) throw new Error("LEAD_STORE_UNCONFIGURED");
-    const { data, error } = await supabase
-      .from("leads")
-      .insert({
-        name: lead.name,
-        email: lead.email,
-        excerpt: lead.excerpt,
-        reason: lead.reason,
-        status: "new",
-      })
-      .select("id")
-      .single();
+    // Generate the id in-app so we never read the row back — this keeps the publishable key
+    // strictly INSERT-only (no SELECT privilege), so it can't read leads even if leaked.
+    const id = crypto.randomUUID();
+    const { error } = await supabase.from("leads").insert({
+      id,
+      name: lead.name,
+      email: lead.email,
+      excerpt: lead.excerpt,
+      reason: lead.reason,
+      status: "new",
+    });
     if (error) throw new Error(error.message);
-    return { id: String(data.id) };
+    return { id };
   },
 };

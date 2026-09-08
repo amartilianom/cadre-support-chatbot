@@ -23,3 +23,7 @@ create policy "public can submit leads"
   for insert
   to anon
   with check (true);
+
+-- Table-level privilege: RLS gates which rows may be inserted, but the anon role also needs the
+-- INSERT grant (the two are separate in Postgres). INSERT only — no SELECT, so leads can't be read.
+grant insert on public.leads to anon;
