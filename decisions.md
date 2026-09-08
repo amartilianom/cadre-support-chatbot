@@ -376,4 +376,53 @@ declared in the Spec's focus note + §11.5, so nothing is hidden.
 - Concept Note done (rev 1): 20:38 · rev 2 (from your review): 21:27
 - Repo cleaned to Markdown reference set: 21:41
 - **Spec (focused) done: 21:43**
-- Next: `CLAUDE.md` + `plan.md`, then scaffold + deploy early, then build F1–F4.
+- `plan.md` + `CLAUDE.md` done: ~21:54 · Next.js scaffold (Next 16 / React 19 / Tailwind v4)
+  merged + committed: 21:59 · Supabase client added: 22:02.
+
+---
+
+## L-12 · 22:02 · Retrieval: lexical for MVP (amends D-02/D-03 implementation)
+**Decided by:** me, at build time, flagged to you for override.
+**Change:** implement `KnowledgeRetriever` with **lexical/keyword scoring** over the curated corpus
+for the MVP, **not** runtime MiniLM embeddings.
+**Because:** deployment reliability is graded and transformers.js model-loading on a Vercel
+serverless **cold start** is a classic demo-killer (multi-second first response, bundle bloat,
+`/tmp` re-download per new instance). The corpus is tiny (~dozens of chunks), so lexical retrieval
+is instant, dependency-free, and deploys anywhere. Answer *grounding* (the graded behaviour) is
+unchanged — only the similarity function differs.
+**Kept open for upgrade:** the `KnowledgeRetriever` interface is unchanged, so semantic embeddings
+or pgvector is a drop-in swap with a clear trigger (corpus grows / paraphrase misses appear).
+**Net dependency effect:** dropped `@huggingface/transformers`; also implementing OpenRouter
+streaming directly (no heavy AI SDK) to avoid version churn on the bleeding-edge Next 16 stack.
+Only added runtime dep: `@supabase/supabase-js`.
+**Status vs docs:** amends Concept D-02/D-03 and Spec TC-003/§8. Will note in the audit; **you can
+override to semantic** and I'll swap the retriever impl.
+**Reversible:** yes — contained behind the retriever interface.
+
+---
+
+## L-13 · 22:13 · MVP built + verified locally (F1–F4); OPEN-Q-01 resolved
+**Built:** the full shell — `ClientProfile`, lexical `KnowledgeRetriever`, curated corpus,
+`LlmProvider` (direct OpenRouter SSE), guardrail system prompt, `ChatOrchestrator`, streaming chat
+UI, `LeadForm`, `LeadStore` (Supabase) + `Notifier` (log), `/api/chat` + `/api/lead`, rate limiter,
+`supabase/schema.sql`. Production build passes (TypeScript green).
+
+**OPEN-Q-01 RESOLVED:** `google/gemini-2.5-flash` is live on OpenRouter and returns grounded
+answers — verified with a real call. No model swap needed.
+
+**Guardrail verification (live, evidence for the audit):**
+| Scenario | FR | Result |
+|---|---|---|
+| Pricing | FR-015 | ✅ declined + routed to strategist |
+| AI Maturity Index + how to get scored | FR-011 | ✅ explained eight-pillar + escalates |
+| Security posture + SOC2/retention guarantee ask | FR-013/014 | ✅ **posture stated, guarantees declined** (D-07 fix works) |
+| Portal access | FR-012 | ✅ explains + routes, no invented URL |
+| Off-topic (weather) | FR-016 | ✅ declined, stayed on-topic |
+| "What does Cadre do + PE?" | FR-010 | ✅ grounded, accurate |
+
+**Not yet verified (needs your accounts):** lead persistence end-to-end (needs Supabase env +
+`schema.sql` run); live public deploy (needs Vercel auth). Both degrade gracefully until then.
+
+### Phase clock
+- MVP F1–F4 built + chat/guardrails verified locally: **22:13**
+- Remaining: README + conformance audit (in progress) · your Vercel deploy · your Supabase setup.
