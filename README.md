@@ -5,6 +5,7 @@ system" block**, not a one-off. It answers common inbound questions from a curat
 knowledge base and **escalates to a captured lead** when it can't or shouldn't answer.
 
 > **Live URL:** **https://cadre-test.vercel.app**
+> **Slides (overview):** **https://amartilianom.github.io/cadre-support-chatbot/** (source: [`docs/slides.md`](docs/slides.md))
 > **Stack:** Next.js 16 (App Router) · TypeScript · Tailwind · OpenRouter (Gemini 2.5 Flash) · Supabase.
 
 This build was run with a **spec-driven methodology**. The thinking is visible in
