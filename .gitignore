@@ -9,6 +9,10 @@ Staff Product Architect.html
 Staff Product Architect_files/
 Cadre_AI_Chatbot_Take_Home_Candidate_v1.1.pdf
 
+# === Cadre's take-home materials (reference/) — kept locally, deliberately NOT published ===
+# Scrubbed from history and ignored so the public repo never republishes Cadre's private prompt/JD.
+reference/
+
 # === Dependencies ===
 node_modules/
 .pnp
