@@ -36,7 +36,7 @@ Each seam is swappable behind its interface (that's the product's whole point �
 | Seam | File | Does | Swap surface |
 |---|---|---|---|
 | `ClientProfile` | `lib/config/client-profile.ts` | The one config that re-skins the bot | corpus, persona, brand, model, escalation target, CTA |
-| `KnowledgeRetriever` | `lib/knowledge/retriever.ts` | Embed query locally, cosine top-k over corpus | swap to pgvector later |
+| `KnowledgeRetriever` | `lib/knowledge/retriever.ts` | Lexical BM25 scoring over the corpus (D-02, L-12) | swap to embeddings/pgvector later |
 | `LlmProvider` | `lib/llm/openrouter.ts` | Streamed chat completion | model via env; provider swappable |
 | `ChatOrchestrator` | `lib/chat/orchestrator.ts` | Retrieve → compose prompt → stream + guardrails | — |
 | `LeadStore` | `lib/leads/store.ts` | Persist a Lead (Supabase) | swap store |
@@ -63,7 +63,6 @@ Escalation: `components/LeadForm.tsx` → `app/api/lead/route.ts` → `LeadStore
 ```bash
 npm run dev                       # local dev at http://localhost:3000
 npm run build && npm start        # production build
-npm run embed                     # rebuild data/corpus-embeddings.json from lib/knowledge/corpus.ts
 npx vercel                        # deploy (or via the Vercel dashboard/GitHub)
 ```
 
@@ -90,3 +89,13 @@ commit real keys. Set the same vars in Vercel's project settings for the deploy.
 
 - Changed behaviour → update `docs/spec.md` (FR/AC) and add a `decisions.md` entry (`L-*`) the same commit.
 - Curated Cadre facts to ground answers: `decisions.md` L-07.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
