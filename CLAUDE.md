@@ -64,6 +64,7 @@ Escalation: `components/LeadForm.tsx` → `app/api/lead/route.ts` → `LeadStore
 ```bash
 npm run dev                       # local dev at http://localhost:3000
 npm run build && npm start        # production build
+npm test                          # Vitest unit tests (retriever seam + email validation) — no network
 npx vercel                        # deploy (or via the Vercel dashboard/GitHub)
 ```
 
@@ -81,6 +82,7 @@ commit real keys. Set the same vars in Vercel's project settings for the deploy.
 
 ## Verifying AI-written code (Code Quality dimension)
 
+- Run `npm test` (Vitest — retriever ranking/grounding + email validation) after touching those seams.
 - After a change, run the relevant §9 scenario against the live/dev bot — don't trust it untested.
 - Watch for the classic failures: fabricated facts, secrets leaking client-side, unescaped output,
   unhandled promise rejections in route handlers, and token/cost blowups.
