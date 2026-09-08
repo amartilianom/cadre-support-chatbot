@@ -341,3 +341,39 @@ lightweight zip should avoid; Markdown is diffable, greppable, and reviewable.
 and `Staff Product Architect_files/` from disk — content is preserved in `reference/*.md`. Root now
 holds only project + reference material. `.gitignore` entries kept as a PII safety net.
 **Reversible:** content retained in `/reference`; the binary/HTML originals are gone.
+
+---
+
+## L-11 · 21:43 · Focused Spec written; methodology machinery trimmed (declared)
+**Decided by:** you (green-lit the focused Spec over the full apparatus).
+**Wrote:** `docs/spec.md` — 31 FRs/NFRs/TCs, EARS phrasing, quantified NFRs (incl. **≤$5 cost**,
+p95 latency), 8 Given/When/Then scenarios with boundary/failure variants, an ER diagram (Lead,
+KbChunk), CWE-shaped security TCs, and acceptance criteria mapping every scenario + A-1…A-4 +
+D-07/08/09.
+
+**Kept (high-signal, directly graded):** §3 scope + inherited D-*; §4 TCs incl. lean §4.5 security;
+§6 glossary; §7 EARS FRs; §8 quantified NFRs; §9 scenarios + key variants; §10 data model + ER
+diagram; §11.1–11.4 acceptance criteria; §17 handoff.
+
+**Trimmed (with reason — the methodology's own guidance says most work shouldn't get the full set,
+and its Spec floor is ~4–10k words built for multi-branch team delivery):**
+- **§11.5 full RTM meta-ACs `AC-50…AC-55`** → condensed to 3 "light" obligations. The full six
+  bind to a heavy Plan-side apparatus (`IMP-*` impact ledger, `OBS-*` observability rows,
+  supply-chain lockfile scan) and **mechanical `T-N.D8/D8b/D9/D10/D15/D16/D20` grep/comm gates** —
+  all designed for a multi-branch Implementation Plan run in CI. *This is one branch, ~4h, no CI
+  gate harness.* Keeping the intent (scenario→test, NFR→check, TC→evidence), dropping the ceremony.
+- **Full per-scenario variant exhaustion** (every boundary/concurrency/property variant) → enumerated
+  only the *consequential* variants; single-path scenarios explicitly declared.
+- **Live CWE-Top-25 fetch (MD-31)** → used a known-relevant CWE set (79/89/200/770 + LLM01) and
+  said so inline. A live fetch + full-Top-25 sweep is disproportionate for this surface.
+- **The separate heavy Implementation Plan** → replaced by root `plan.md` (their required
+  artifact), per L-06. So the Plan-side mechanical gates have no home by design.
+**Why it's safe:** a take-home reviewer values judgment about *what to run*; over-running the
+pipeline on a 4h build is the anti-pattern the methodology itself warns against. The trims are
+declared in the Spec's focus note + §11.5, so nothing is hidden.
+
+### Phase clock
+- Concept Note done (rev 1): 20:38 · rev 2 (from your review): 21:27
+- Repo cleaned to Markdown reference set: 21:41
+- **Spec (focused) done: 21:43**
+- Next: `CLAUDE.md` + `plan.md`, then scaffold + deploy early, then build F1–F4.
